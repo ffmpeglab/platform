@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { AppService } from './app.service';
 import ClientOAuth2 from 'client-oauth2';
-import { config, SUPABASE_URL, vaultClientConfig } from './config';
+import { config, POOL_PORT, POOL_POSTFIX, vaultClientConfig } from './config';
 import * as vault from '@hashicorp/vault-client-typescript';
 import { SupabaseSession, SupabaseTenant } from './types';
 import { withSupabase, SupabaseCtx } from '@supabase/server/adapters/nestjs';
@@ -30,6 +30,30 @@ export class AppController {
   @Get('platform/me')
   me(@SupabaseCtx('userClaims') user: SupabaseContext['userClaims']) {
     return user;
+  }
+
+  @Get('platform/projects/:orgId')
+  async projects(
+    @Param('orgId') orgId,
+    @SupabaseCtx('userClaims') user: SupabaseContext['userClaims']) {
+    const session = await this.appService.getSessionForUser(user!.id);
+
+    const supaManagementClient = new SupabaseManagementAPI({
+      accessToken: session.accessToken ?? session.access_token,
+    });
+    return (await supaManagementClient.getAllProjectsForOrganization(orgId)).data
+  }
+
+  @Get('platform/organizations')
+  async organizations(
+    @SupabaseCtx('userClaims') user: SupabaseContext['userClaims']) {
+    const session = await this.appService.getSessionForUser(user!.id);
+
+    const supaManagementClient = new SupabaseManagementAPI({
+      accessToken: session.accessToken ?? session.access_token,
+    });
+
+    return (await supaManagementClient.listAllOrganizations()).data
   }
 
   @Get('platform/login')
@@ -82,7 +106,7 @@ export class AppController {
       accessToken: session.accessToken ?? session.access_token,
     });
 
-    // 3. Check if tenant already exists and is active
+    // Check if tenant already exists and is active
     let existingTenant;
     try {
       existingTenant = (
@@ -96,29 +120,20 @@ export class AppController {
       return { status: 'on' };
     }
 
-    // 4. Generate database credentials
+    // Generate database credentials
     const dbCreds = createPostgresCredentials();
     const createUserSQL = createPostgresqlQueryForCredentials(dbCreds);
-    console.info('new query', createUserSQL);
-    // 5. Execute SQL on the Supabase project to create user/database
+
+    // Execute SQL on the Supabase project to create user/database
     await supaManagementClient.runAQuery(projectId, { query: createUserSQL });
 
-    // 6. Enable S3 protocol for storage if not already enabled
-    // const storageConfig = await supaManagementClient.getStorageConfig(projectId);
-    // if (!storageConfig.data.features.s3Protocol.enabled) {
-    //   await supaManagementClient.updateStorageConfig(projectId, {
-    //     ...storageConfig.data,
-    //     features: {
-    //       ...storageConfig.data.features,
-    //       s3Protocol: { enabled: true },
-    //     },
-    //   });
-    // }
-
-    // 7. Fetch full project details
+    // Fetch full project details
     const project = await getProject(supaManagementClient, projectId);
-    const poolPort = 6543;
-    // 8. Build tenant record
+
+    // Build tenant record
+    const poolPort = POOL_PORT;
+    const poolHost = `aws-0-${project.region}${POOL_POSTFIX}`
+
     const newTenant: SupabaseTenant = {
       ...project,
       id: projectId,
@@ -127,20 +142,20 @@ export class AppController {
       updated: Date.now(),
       ffmpeglabStatus: 'on',
       db: {
-        host: project.database.host,
-        port: poolPort,
-        user: dbCreds.user,
+        host: poolHost,
+        port: poolPort as number,
+        user: dbCreds.user+'.'+projectId,
         password: dbCreds.password,
         database: dbCreds.database,
       },
-      DB_HOST: project.database.host,
+      DB_HOST: poolHost,
       DB_USER: dbCreds.user,
-      DB_PORT: poolPort,
+      DB_PORT: poolPort as number,
       DB_PASSWORD: dbCreds.password,
       DB_NAME: dbCreds.database,
     };
 
-    // 9. Persist tenant
+    // Persist tenant
     await secretsClient.kvV2Write(`tenants/${projectId}`, 'secret', {
       data: newTenant,
     });

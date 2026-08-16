@@ -11,6 +11,10 @@ export const config = {
 
 export const SUPABASE_URL = process.env.SUPABASE_URL;
 
+export const POOL_POSTFIX = process.env.SUPABASE_CLOUD_POSTGRES_POOLER_URL || ".pooler.supabase.com"
+
+export const POOL_PORT = process.env.SUPABASE_CLOUD_POSTGRES_POOLER_PORT || 6543
+
 export const FFMPEGLAB_PLATFORM_PORT =
   process.env.FFMPEGLAB_PLATFORM_PORT ?? 7001;
 

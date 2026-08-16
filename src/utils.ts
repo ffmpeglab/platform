@@ -16,6 +16,7 @@ export function createPostgresqlQueryForCredentials(creds: {
   return `
     CREATE USER ${creds.user} WITH PASSWORD '${creds.password}' CREATEDB;
     GRANT CREATE ON SCHEMA public to ${creds.user};
+    GRANT ALL PERMISSIONS ON SCHEMA pgmq to ${creds.user};
   `;
 }
 
