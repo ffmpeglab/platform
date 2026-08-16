@@ -35,25 +35,28 @@ export class AppController {
   @Get('platform/projects/:orgId')
   async projects(
     @Param('orgId') orgId,
-    @SupabaseCtx('userClaims') user: SupabaseContext['userClaims']) {
+    @SupabaseCtx('userClaims') user: SupabaseContext['userClaims'],
+  ) {
     const session = await this.appService.getSessionForUser(user!.id);
 
     const supaManagementClient = new SupabaseManagementAPI({
       accessToken: session.accessToken ?? session.access_token,
     });
-    return (await supaManagementClient.getAllProjectsForOrganization(orgId)).data
+    return (await supaManagementClient.getAllProjectsForOrganization(orgId))
+      .data;
   }
 
   @Get('platform/organizations')
   async organizations(
-    @SupabaseCtx('userClaims') user: SupabaseContext['userClaims']) {
+    @SupabaseCtx('userClaims') user: SupabaseContext['userClaims'],
+  ) {
     const session = await this.appService.getSessionForUser(user!.id);
 
     const supaManagementClient = new SupabaseManagementAPI({
       accessToken: session.accessToken ?? session.access_token,
     });
 
-    return (await supaManagementClient.listAllOrganizations()).data
+    return (await supaManagementClient.listAllOrganizations()).data;
   }
 
   @Get('platform/login')
@@ -132,7 +135,7 @@ export class AppController {
 
     // Build tenant record
     const poolPort = POOL_PORT;
-    const poolHost = `aws-0-${project.region}${POOL_POSTFIX}`
+    const poolHost = `aws-0-${project.region}${POOL_POSTFIX}`;
 
     const newTenant: SupabaseTenant = {
       ...project,
@@ -144,7 +147,7 @@ export class AppController {
       db: {
         host: poolHost,
         port: poolPort as number,
-        user: dbCreds.user+'.'+projectId,
+        user: dbCreds.user + '.' + projectId,
         password: dbCreds.password,
         database: dbCreds.database,
       },
