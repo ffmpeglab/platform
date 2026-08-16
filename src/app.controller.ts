@@ -8,13 +8,10 @@ import {
 } from '@nestjs/common';
 import { AppService } from './app.service';
 import ClientOAuth2 from 'client-oauth2';
-import { config, vaultClientConfig } from './config';
-import * as vault from '@hashicorp/vault-client-typescript';
+import { config } from './config';
 import { SupabaseSession } from './types';
 import { withSupabase, SupabaseCtx } from '@supabase/server/adapters/nestjs';
 import type { SupabaseContext } from '@supabase/server';
-
-const secretsClient = new vault.SecretsApi(vaultClientConfig);
 const oauth2Client = new ClientOAuth2(config);
 
 @Controller()
@@ -23,7 +20,18 @@ export class AppController {
   constructor(private readonly appService: AppService) {}
 
   @Get('platform/me')
-  me(@SupabaseCtx('userClaims') user: SupabaseContext['userClaims']) {
+  async me(@SupabaseCtx('userClaims') user: SupabaseContext['userClaims']) {
+    let session: SupabaseSession | undefined;
+    try {
+      session = await this.appService.getSessionForUser(user!.id);
+    } catch (err) {
+      console.error('session error', err);
+    }
+
+    if (!session?.accessToken) {
+      return { error: 'platform_api_not_enabled' };
+    }
+
     return user;
   }
 
@@ -37,6 +45,23 @@ export class AppController {
     );
     return (await supaManagementClient.getAllProjectsForOrganization(orgId))
       .data;
+  }
+
+  @Get('platform/tenant/:id')
+  async getTenant(
+    @Param('projectId') projectId,
+    @SupabaseCtx('userClaims') user: SupabaseContext['userClaims'],
+  ) {
+    const tenant = await this.appService.getTenant(user!.id, projectId);
+    return {
+      id: tenant?.id,
+      name: tenant?.name,
+      status: tenant?.status,
+      ffmpeglabStatus: tenant?.ffmpeglabStatus,
+      ref: tenant?.ref,
+      region: tenant?.region,
+      created: tenant?.created,
+    };
   }
 
   @Get('platform/organizations')
@@ -65,25 +90,16 @@ export class AppController {
     @Response() response,
     @SupabaseCtx('userClaims') user: SupabaseContext['userClaims'],
   ): Promise<void> {
-    const session = await oauth2Client.code.getToken((req as Request).url);
+    const oauthSession = await oauth2Client.code.getToken((req as Request).url);
 
-    if (!session.accessToken) throw new Error('invalid_credentials');
+    if (!oauthSession.accessToken) {
+      response.redirect(`${config.webAppRedirect}/error`);
+      return;
+    }
 
-    const supabaseSession: SupabaseSession = {
-      accessToken: session.accessToken,
-      refreshToken: session.refreshToken,
-      created: new Date().valueOf(),
-      expires: parseInt(session.data.expires),
-      refresh_token: session.refreshToken,
-      access_token: session.accessToken,
-    };
-    await secretsClient.kvV2Write('users/' + user!.id, 'secret', {
-      data: supabaseSession,
-    });
+    await this.appService.saveOauthSession(user!.id, oauthSession);
 
-    const params = new URLSearchParams(supabaseSession as any).toString();
-
-    response.redirect(`${config.webAppRedirect}/?${params}`);
+    response.redirect(`${config.webAppRedirect}/success`);
   }
 
   @Get('platform/connect/project/:projectId')
@@ -91,8 +107,7 @@ export class AppController {
     @Param('projectId') projectId,
     @SupabaseCtx('userClaims') user: SupabaseContext['userClaims'],
   ) {
-    // Check if tenant already exists and is active
-    const existingTenant = await this.appService.getTenant(projectId);
+    const existingTenant = await this.appService.getTenant(user!.id, projectId);
 
     if (existingTenant && existingTenant.ffmpeglabStatus === 'on') {
       return { status: 'on' };

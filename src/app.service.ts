@@ -16,6 +16,42 @@ const oauth2Client = new ClientOAuth2(config);
 
 @Injectable()
 export class AppService {
+  async getSessionForUser(userId: string) {
+    let session = (await secretsClient.kvV2Read('users/' + userId, 'secret'))
+      .data as SupabaseSession;
+    const sessionExpiresDate = session.created + session.expires;
+    const isSessionValid = new Date().valueOf() < sessionExpiresDate;
+    console.info({ session, isSessionValid });
+    if (!isSessionValid) {
+      const oauthSession = await oauth2Client
+        .createToken(session.accessToken as string, session.refreshToken as any)
+        .refresh();
+      if (!oauthSession.accessToken)
+        throw new Error('unable_to_refresh_session');
+      session = await this.saveOauthSession(userId, oauthSession);
+    }
+    return session;
+  }
+
+  async saveOauthSession(
+    userId: string,
+    oauthSession: ClientOAuth2.Token,
+  ): Promise<SupabaseSession> {
+    const session = {
+      accessToken: oauthSession.accessToken,
+      refreshToken: oauthSession.refreshToken,
+      created: new Date().valueOf(),
+      expires: parseInt(oauthSession.data.expires),
+      refresh_token: oauthSession.refreshToken,
+      access_token: oauthSession.accessToken,
+    };
+
+    await secretsClient.kvV2Write('users/' + userId, 'secret', {
+      data: session,
+    });
+    return session;
+  }
+
   async createSupaClient(userId: string) {
     const session = await this.getSessionForUser(userId);
 
@@ -25,10 +61,11 @@ export class AppService {
     return supaManagementClient;
   }
 
-  async getTenant(projectId: string) {
+  async getTenant(userId: string, projectId: string) {
     try {
-      return (await secretsClient.kvV2Read(`tenants/${projectId}`, 'secret'))
-        .data as SupabaseTenant;
+      return (
+        await secretsClient.kvV2Read(`tenants/${userId}/${projectId}`, 'secret')
+      ).data as SupabaseTenant;
     } catch (error) {
       // Tenant not found – continue
     }
@@ -72,39 +109,9 @@ export class AppService {
     };
 
     // Persist tenant
-    await secretsClient.kvV2Write(`tenants/${projectId}`, 'secret', {
+    await secretsClient.kvV2Write(`tenants/${userId}/${projectId}`, 'secret', {
       data: newTenant,
     });
     return newTenant;
-  }
-
-  async getSessionForUser(userId: string) {
-    let session = (await secretsClient.kvV2Read('users/' + userId, 'secret'))
-      .data as SupabaseSession;
-    const sessionExpiresDate = session.created + session.expires;
-    const isSessionValid = new Date().valueOf() < sessionExpiresDate;
-    console.info({ session, isSessionValid });
-    if (!isSessionValid) {
-      const supabaseSession = await oauth2Client
-        .createToken(session.accessToken as string, session.refreshToken as any)
-        .refresh();
-      console.info('newSession', supabaseSession);
-      if (!supabaseSession.accessToken)
-        throw new Error('unable_to_refresh_session');
-
-      session = {
-        accessToken: supabaseSession.accessToken,
-        refreshToken: supabaseSession.refreshToken,
-        created: new Date().valueOf(),
-        expires: parseInt(supabaseSession.data.expires),
-        refresh_token: supabaseSession.refreshToken,
-        access_token: supabaseSession.accessToken,
-      };
-
-      await secretsClient.kvV2Write('users/' + userId, 'secret', {
-        data: session,
-      });
-    }
-    return session;
   }
 }
