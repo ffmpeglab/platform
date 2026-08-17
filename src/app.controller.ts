@@ -4,6 +4,7 @@ import {
   Param,
   Request,
   Response,
+  Session,
   UseGuards,
 } from '@nestjs/common';
 import { AppService } from './app.service';
@@ -88,28 +89,14 @@ export class AppController {
   }
 
   @Get('platform/login')
-  platformLogin(): { redirectUri: string } {
+  platformLogin(
+    @Session() session: Record<string, any>,
+    @SupabaseCtx('userClaims') user: SupabaseContext['userClaims'],
+  ): { redirectUri: string } {
     console.info('platformloginstart');
+    session.user = user?.id;
     const redirectUri = oauth2Client.code.getUri();
     return { redirectUri };
-  }
-
-  @Get('platform/oauth2/callback')
-  async platformLoginCallback(
-    @Request() req,
-    @Response() response,
-    @SupabaseCtx('userClaims') user: SupabaseContext['userClaims'],
-  ): Promise<void> {
-    const oauthSession = await oauth2Client.code.getToken((req as Request).url);
-
-    if (!oauthSession.accessToken) {
-      response.redirect(`${config.webAppRedirect}/error`);
-      return;
-    }
-
-    await this.appService.saveOauthSession(user!.id, oauthSession);
-
-    response.redirect(`${config.webAppRedirect}/success`);
   }
 
   @Get('platform/connect/project/:projectId')

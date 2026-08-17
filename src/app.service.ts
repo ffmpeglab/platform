@@ -87,6 +87,7 @@ export class AppService {
     const poolPort = POOL_PORT;
     const poolHost = `aws-0-${project.region}${POOL_POSTFIX}`;
     const now = Date.now();
+    const dbUserName = dbCreds.user + '.' + projectId;
     const newTenant: SupabaseTenant = {
       ...project,
       id: projectId,
@@ -97,12 +98,12 @@ export class AppService {
       db: {
         host: poolHost,
         port: poolPort as number,
-        user: dbCreds.user + '.' + projectId,
+        user: dbUserName,
         password: dbCreds.password,
         database: dbCreds.database,
       },
       DB_HOST: poolHost,
-      DB_USER: dbCreds.user,
+      DB_USER: dbUserName,
       DB_PORT: poolPort as number,
       DB_PASSWORD: dbCreds.password,
       DB_NAME: dbCreds.database,
