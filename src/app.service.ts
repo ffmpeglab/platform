@@ -36,11 +36,13 @@ export class AppService {
     userId: string,
     oauthSession: ClientOAuth2.Token,
   ): Promise<SupabaseSession> {
-    const session = {
+    const session: SupabaseSession = {
       accessToken: oauthSession.accessToken,
       refreshToken: oauthSession.refreshToken,
       created: new Date().valueOf(),
-      expires: 3600,
+      expires: !isNaN(parseInt(process.env.TOKEN_EXPIRE_TIME as string))
+        ? parseInt(process.env.TOKEN_EXPIRE_TIME as string)
+        : 3600,
       refresh_token: oauthSession.refreshToken,
       access_token: oauthSession.accessToken,
     };
