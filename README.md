@@ -1,98 +1,305 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Supabase Extension Template
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+[![Supabase](https://img.shields.io/badge/Supabase-3FCF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com)
+[![Vault](https://img.shields.io/badge/Vault-FFD700?style=for-the-badge&logo=vault&logoColor=black)](https://www.vaultproject.io/)
+[![NestJS](https://img.shields.io/badge/NestJS-E0234E?style=for-the-badge&logo=nestjs&logoColor=white)](https://nestjs.com)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+**A secure, idempotent foundation for building Supabase extensions that require Vault‑managed secrets, fine‑grained database permissions, and full organization/project management.**
 
-## Description
+This template handles **platform user authentication via Supabase Auth**, **OAuth2 Connect** to let users bring their own Supabase projects, provisions dedicated database users per tenant, stores all secrets in HashiCorp Vault, provides an omnidempotent API layer, and exposes **REST endpoints** for organizations, projects, tenant status, and OAuth2 flow – ready to use out of the box.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+---
 
-## Project setup
+## Why This Template?
 
-```bash
-$ yarn install
+When building a Supabase extension (e.g., a file processing service, a data sync tool, or an analytics add‑on), you need to solve multiple challenges:
+
+1. **Who is using your platform?** – Users sign up/log in via Supabase Auth. The `userId` from the JWT scopes all operations.
+2. **Which organizations and projects do they have?** – The template integrates with Supabase's Management API to list organizations and their projects.
+3. **Which Supabase project do they want to connect?** – Users authorise your extension to access their own Supabase project via **Supabase Connect (OAuth2)** .
+4. **How to provision secure, isolated tenants?** – Creates dedicated database users per (user, project) pair, idempotently.
+5. **How to manage tenant lifecycle?** – Exposes endpoints to enable/disable tenants.
+
+This template solves all of these, with:
+
+- **Full REST API** for organizations, projects, tenants, and OAuth2 flow.
+- **Automatic OAuth2 token refresh**.
+- **Secure credential storage in Vault**.
+- **Idempotent provisioning** – safe to retry.
+
+---
+
+## What It Provides
+
+| Feature | Description |
+|---------|-------------|
+| **Platform User Authentication** | Uses Supabase Auth to authenticate users of your extension. All endpoints are protected by `withSupabase` guard. |
+| **Organization & Project Listing** | Calls Supabase Management API to list the user's organizations and their projects. |
+| **OAuth2 Connect (Bring Your Own Supabase)** | Users authorise your extension to access their Supabase project via Supabase Connect. |
+| **Idempotent Tenant Provisioning** | Each platform user + external project pair gets a dedicated database user. Creation is idempotent. |
+| **Tenant Lifecycle Management** | Enable/disable tenants via a toggle endpoint. |
+| **Secure Credential Storage** | All secrets (OAuth2 tokens, database credentials) are stored in Vault. |
+| **Automated Token Refresh** | OAuth2 access tokens are refreshed automatically when expired. |
+
+---
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    Your Extension (NestJS)                              │
+│  ┌───────────────────────────────────────────────────────────────────┐ │
+│  │  @UseGuards(withSupabase) – validates JWT, injects userClaims   │ │
+│  └───────────────────────────────────────────────────────────────────┘ │
+│  ┌───────────────────────────────────────────────────────────────────┐ │
+│  │  AppController (REST endpoints)                                  │ │
+│  │  - GET /platform/me                                              │ │
+│  │  - GET /platform/organizations                                   │ │
+│  │  - GET /platform/projects/:orgId                                 │ │
+│  │  - GET /platform/tenant/:projectId                               │ │
+│  │  - PUT /platform/tenant/:projectId/:status                       │ │
+│  │  - GET /platform/login (initiate OAuth2)                         │ │
+│  │  - GET /platform/connect/project/:projectId (provision tenant)   │ │
+│  │  - GET /platform/oauth2/callback (OAuth2 callback)               │ │
+│  └───────────────────────────────────────────────────────────────────┘ │
+│  ┌───────────────────────────────────────────────────────────────────┐ │
+│  │  AppService (core logic)                                         │ │
+│  │  - getTenant(), createTenant(), updateTenant()                   │ │
+│  │  - createSupaClient() – uses Vault-stored tokens                │ │
+│  └───────────────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                   HashiCorp Vault                                       │
+│  ┌─────────────────────────────────────────────────────────────────────┐ │
+│  │  secret/users/{userId}          → OAuth2 session tokens            │ │
+│  │  secret/tenants/{userId}/{projectId} → Tenant records & DB creds   │ │
+│  └─────────────────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                          Supabase (x2)                                  │
+│  ┌─────────────────────────────┐  ┌──────────────────────────────────┐ │
+│  │  Your Platform's Supabase   │  │  User's External Supabase        │ │
+│  │  - Auth (users table)       │  │  - PostgreSQL (per‑tenant user)  │ │
+│  │  - Management API           │  │  - Storage                       │ │
+│  └─────────────────────────────┘  └──────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
-## Compile and run the project
+---
 
-```bash
-# development
-$ yarn run start
+## API Endpoints (Fully Implemented)
 
-# watch mode
-$ yarn run start:dev
+The template exposes a comprehensive REST API. All endpoints are protected by the `withSupabase` guard, which validates the Supabase JWT from the `Authorization` header and injects the user's claims.
 
-# production mode
-$ yarn run start:prod
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/platform/me` | Returns the authenticated platform user's info (from Supabase Auth). Also checks if the user has an OAuth2 session (i.e., has connected Supabase Connect). |
+| `GET` | `/platform/organizations` | Lists all Supabase organizations the authenticated user belongs to. |
+| `GET` | `/platform/projects/:orgId` | Lists all Supabase projects within the given organization. |
+| `GET` | `/platform/tenant/:projectId` | Retrieves the tenant record for the given project (if provisioned). Returns `id`, `name`, `status`, `ffmpeglabStatus`, `ref`, `region`, `created`. |
+| `PUT` | `/platform/tenant/:projectId/:status` | Toggles the tenant's `ffmpeglabStatus` (e.g., `"on"`/`"off"`). Updates the tenant record in Vault. |
+| `GET` | `/platform/login` | Initiates the OAuth2 flow with Supabase Connect. Returns the redirect URI to send the user to. |
+| `GET` | `/platform/connect/project/:projectId` | Provisions a tenant for the given project. If already provisioned and enabled, returns `{ status: 'on' }`; otherwise creates the tenant (idempotent) and returns `{ status: 'on' }`. |
+| `GET` | `/platform/oauth2/callback` | OAuth2 callback endpoint (handled separately; exchanges code, stores session, redirects to frontend). |
+
+> **Note**: The `tenant` endpoints use the platform user's `userId` (from the JWT) to scope the operation – so users can only access their own tenants.
+
+---
+
+## Environment Variables (All Required)
+
+Create a `.env` file in the root:
+
+```env
+# ============================================
+# 1. PLATFORM SUPABASE (Auth & Management API)
+# ============================================
+SUPABASE_URL=https://your-platform-project.supabase.co
+SUPABASE_PUBLISHABLE_KEY=your_publishable_key   # used by withSupabase guard
+SUPABASE_SECRET_KEY=your_service_role_key       # used to validate JWTs
+SUPABASE_JWKS_URL=https://your-platform-project.supabase.co/auth/v1/.well-known/jwks.json
+
+# ============================================
+# 2. EXTERNAL PROJECT CONNECT (OAuth2)
+# ============================================
+SUPA_CONNECT_CLIENT_ID=your_client_id
+SUPA_CONNECT_CLIENT_SECRET=your_client_secret
+
+# ============================================
+# 3. HASHICORP VAULT
+# ============================================
+VAULT_URL=https://vault.your-domain.com
+VAULT_TOKEN=your_vault_token
+
+# ============================================
+# 4. SERVICE URLs & PORTS
+# ============================================
+PLATFORM_HOST=http://localhost:7001          # Your API server URL
+WEBAPP_HOST=http://localhost:8080            # Your frontend URL (OAuth redirect)
+FFMPEGLAB_PLATFORM_PORT=7001                 # Port for this service
+
+# ============================================
+# 5. SECURITY & SESSIONS
+# ============================================
+TOKEN_EXPIRE_TIME=3600                       # optional, default 3600s
+COOKIE_SECRET=your-strong-secret-here        # sign session cookies (min 32 chars)
+
+# ============================================
+# 6. DATABASE POOLER (for provisioning users)
+# ============================================
+SUPABASE_CLOUD_POSTGRES_POOLER_URL=.pooler.supabase.com
+SUPABASE_CLOUD_POSTGRES_POOLER_PORT=6543
 ```
 
-## Run tests
+### Environment Variables Reference
+
+| Variable | Purpose | Required |
+|----------|---------|----------|
+| `SUPABASE_URL` | Your platform's Supabase project URL. | ✅ Yes |
+| `SUPABASE_PUBLISHABLE_KEY` | Publishable (anon) key for the platform Supabase (used by `withSupabase` guard). | ✅ Yes |
+| `SUPABASE_SECRET_KEY` | Service role key for the platform Supabase (used to validate JWTs). | ✅ Yes |
+| `SUPABASE_JWKS_URL` | JWKS URL for the platform Supabase (for JWT verification). | ✅ Yes |
+| `SUPA_CONNECT_CLIENT_ID` | OAuth2 client ID from Supabase Connect. | ✅ Yes |
+| `SUPA_CONNECT_CLIENT_SECRET` | OAuth2 client secret. | ✅ Yes |
+| `VAULT_URL` | HashiCorp Vault server address. | ✅ Yes |
+| `VAULT_TOKEN` | Authentication token for Vault. | ✅ Yes |
+| `PLATFORM_HOST` | Public URL of this API service (for OAuth2 redirects). | ✅ Yes |
+| `WEBAPP_HOST` | Your frontend URL (where users are sent after OAuth). | ✅ Yes |
+| `FFMPEGLAB_PLATFORM_PORT` | Port the server listens on. | ✅ Yes |
+| `TOKEN_EXPIRE_TIME` | Session expiry in seconds (default: 3600). | ❌ Optional |
+| `COOKIE_SECRET` | Secret used to sign session cookies. **Use a long, random string** (min 32 chars). | ✅ Yes |
+| `SUPABASE_CLOUD_POSTGRES_POOLER_URL` | Pooler hostname suffix (e.g., `.pooler.supabase.com`). | ✅ Yes |
+| `SUPABASE_CLOUD_POSTGRES_POOLER_PORT` | Pooler port (usually `6543`). | ✅ Yes |
+
+---
+
+## How It Works (Step‑by‑Step)
+
+### 1. Platform User Logs In
+- User signs up / logs in via Supabase Auth on your frontend.
+- Frontend obtains a JWT and sends it in `Authorization: Bearer <jwt>` to your API.
+- The `withSupabase` guard validates the JWT and attaches `userClaims` to the request context.
+
+### 2. User Lists Organizations & Projects
+- The frontend calls `GET /platform/organizations` → returns the user's Supabase orgs.
+- Then calls `GET /platform/projects/:orgId` → lists all projects in that org.
+
+### 3. User Connects a Project (OAuth2)
+- The frontend calls `GET /platform/login` to get the OAuth2 redirect URI.
+- The user is redirected to Supabase Connect to authorise your extension.
+- After authorisation, Supabase redirects to `/platform/oauth2/callback` with a code.
+- The callback exchanges the code, stores the session in Vault under `secret/users/{userId}`, and redirects back to your frontend with status.
+
+### 4. Tenant Provisioning (Idempotent)
+- When the user selects a project, the frontend calls `GET /platform/connect/project/:projectId`.
+- The service checks Vault for an existing tenant at `secret/tenants/{userId}/{projectId}`.
+- If found and enabled, it returns quickly.
+- If not found, it generates deterministic database credentials, creates the database user in the external Supabase project, and stores the tenant record in Vault.
+
+### 5. Tenant Management
+- `GET /platform/tenant/:projectId` retrieves the tenant record.
+- `PUT /platform/tenant/:projectId/:status` toggles the tenant's `ffmpeglabStatus` (e.g., enable/disable).
+
+### 6. Ongoing Operations
+- All endpoints automatically refresh the OAuth2 access token if expired (using the stored refresh token), ensuring seamless operation.
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) (v22 or newer)
+- [HashiCorp Vault](https://www.vaultproject.io/) (self‑hosted or cloud)
+- **Two Supabase projects** (or one, but conceptually):
+  1. **Platform Supabase** – handles authentication for your extension's users.
+  2. **External Supabase** – the user's own project (they connect via OAuth2).
+- [Supabase Connect](https://supabase.com/docs/guides/platform/oauth-apps) configured for OAuth2.
+
+### Installation
 
 ```bash
-# unit tests
-$ yarn run test
+# Clone the template
+git clone https://github.com/ffmpeglab/platform.git my-extension
+cd my-extension
 
-# e2e tests
-$ yarn run test:e2e
+# Install dependencies
+npm install
 
-# test coverage
-$ yarn run test:cov
+# Build
+npm run build
+
+# Start the server
+npm start
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### Docker
 
 ```bash
-$ yarn install -g @nestjs/mau
-$ mau deploy
+docker build -t my-extension .
+docker run -p 7001:7001 --env-file .env my-extension
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+---
 
-## Resources
+## Vault Secrets Structure
 
-Check out a few resources that may come in handy when working with NestJS:
+The template stores secrets at these Vault paths, scoped to the platform `userId`:
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+| Path | Content |
+|------|---------|
+| `secret/users/{userId}` | Platform user's OAuth2 session: `{ access_token, refresh_token, expires_at }` |
+| `secret/tenants/{userId}/{projectId}` | Tenant record: `{ id, name, status, ffmpeglabStatus, ref, region, created, databaseUser, databasePassword }` |
 
-## Support
+---
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+## Development
 
-## Stay in touch
+```bash
+# Watch mode
+npm run start:dev
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+# Lint
+npm run lint
+
+# Format
+npm run format
+
+# Test
+npm test
+```
+
+---
+
+## Customising for Your Extension
+
+- **Add business logic** – extend or replace `AppService`.
+- **Add new endpoints** – create additional controllers.
+- **Adjust OAuth2 scopes** – modify the Supabase Connect request if you need more permissions.
+- **Extend tenant provisioning** – e.g., create custom schemas, set up RLS policies, or initialise tables when a tenant is created.
+
+---
 
 ## License
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+This project is licensed under the MIT License – see the [LICENSE](https://github.com/ffmpeglab/platform/blob/main/LICENSE) file for details.
+
+---
+
+## Links
+
+- **Website**: [ffmpeglab.com](https://ffmpeglab.com)
+- **GitHub**: [github.com/ffmpeglab/platform](https://github.com/ffmpeglab/platform)
+- **Documentation**: [ffmpeglab.com/docs](https://ffmpeglab.com/docs)
+- **Discord**: [Join our community](https://discord.gg/ffmpeglab)
+
+---
+
+**Built with ❤️ by the FFmpegLab team. Open source, self‑hostable, and privacy‑first.**  
+Use this template to accelerate your own Supabase extension development.
