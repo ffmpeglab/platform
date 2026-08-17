@@ -2,8 +2,7 @@ import {
   Controller,
   Get,
   Param,
-  Request,
-  Response,
+  Put,
   Session,
   UseGuards,
 } from '@nestjs/common';
@@ -13,6 +12,7 @@ import { config } from './config';
 import { SupabaseSession } from './types';
 import { withSupabase, SupabaseCtx } from '@supabase/server/adapters/nestjs';
 import type { SupabaseContext } from '@supabase/server';
+
 const oauth2Client = new ClientOAuth2(config);
 
 @Controller()
@@ -77,6 +77,19 @@ export class AppController {
     };
   }
 
+  @Put('platform/tenant/:id/:status')
+  async toggleTenant(
+    @Param('projectId') projectId,
+    @Param('status') status,
+    @SupabaseCtx('userClaims') user: SupabaseContext['userClaims'],
+  ) {
+    const tenant = await this.appService.getTenant(user!.id, projectId);
+    if (tenant) {
+      tenant.ffmpeglabStatus = status;
+      return await this.appService.updateTenant(tenant);
+    }
+  }
+
   @Get('platform/organizations')
   async organizations(
     @SupabaseCtx('userClaims') user: SupabaseContext['userClaims'],
@@ -84,7 +97,6 @@ export class AppController {
     const supaManagementClient = await this.appService.createSupaClient(
       user!.id,
     );
-
     return (await supaManagementClient.listAllOrganizations()).data;
   }
 
@@ -93,7 +105,6 @@ export class AppController {
     @Session() session: Record<string, any>,
     @SupabaseCtx('userClaims') user: SupabaseContext['userClaims'],
   ): { redirectUri: string } {
-    console.info('platformloginstart');
     session.user = user?.id;
     const redirectUri = oauth2Client.code.getUri();
     return { redirectUri };

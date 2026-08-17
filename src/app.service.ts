@@ -70,6 +70,17 @@ export class AppService {
     }
   }
 
+  async updateTenant(tenant: SupabaseTenant) {
+    await secretsClient.kvV2Write(
+      `tenants/${tenant.user}/${tenant.id}`,
+      'secret',
+      {
+        data: tenant,
+      },
+    );
+    return this.getTenant(tenant.user, tenant.id);
+  }
+
   async createTenant(userId: string, projectId: string) {
     const supaManagementClient = await this.createSupaClient(userId);
     // Generate database credentials
