@@ -11,6 +11,8 @@ RUN npm i -g @nestjs/cli
 
 RUN yarn
 
+RUN ls node_modules
+
 RUN yarn build
 
 # Expose port
