@@ -9,9 +9,7 @@ COPY . .
 
 RUN npm i -g @nestjs/cli
 
-RUN npm i
-
-RUN ls -1 node_modules
+RUN yarn
 
 RUN yarn build
 
