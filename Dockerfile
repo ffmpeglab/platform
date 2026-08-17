@@ -9,6 +9,8 @@ COPY . .
 
 RUN npm i -g @nestjs/cli
 
+RUN yarn set version stable
+RUN yarn install
 RUN yarn
 
 RUN mkdir node_modules/@hashicorp
