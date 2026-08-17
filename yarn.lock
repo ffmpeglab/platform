@@ -5217,10 +5217,10 @@ vary@^1, vary@^1.1.2:
   resolved "https://registry.yarnpkg.com/vary/-/vary-1.1.2.tgz#2299f02c6ded30d4a5961b0b9f74524a18f634fc"
   integrity sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg==
 
-vault-client-typescript@^0.3.0:
-  version "0.3.10"
-  resolved "https://registry.yarnpkg.com/vault-client-typescript/-/vault-client-typescript-0.3.10.tgz#caad02afe12fc1b596f01fd8dafd64994920471f"
-  integrity sha512-FHVz6ZPQnay+2BiUBvAz9K+PAt22RkluMSmbyrmdtpxcwPm8rwfHKUt8R6OWIJye3c4jXP9e2qK+OIEavot4Fg==
+vault-client-typescript@^0.3.10:
+  version "0.3.11"
+  resolved "https://registry.yarnpkg.com/vault-client-typescript/-/vault-client-typescript-0.3.11.tgz#7347db62dac37fc8c365dd03503815032a4d5a30"
+  integrity sha512-qE7Exc4uG6wD8lBeXoZ2i4z3y7K/YK+2jvWc8LFZiwuW2L2iNOcxnr7fUXrKzpHK4uPdPVD+klwreKSsgVugGA==
 
 walker@^1.0.8:
   version "1.0.8"
