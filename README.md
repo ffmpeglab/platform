@@ -50,44 +50,44 @@ This template solves all of these, with:
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                    Your Extension (NestJS)                              │
-│  ┌───────────────────────────────────────────────────────────────────┐ │
-│  │  @UseGuards(withSupabase) – validates JWT, injects userClaims   │ │
-│  └───────────────────────────────────────────────────────────────────┘ │
-│  ┌───────────────────────────────────────────────────────────────────┐ │
-│  │  AppController (REST endpoints)                                  │ │
-│  │  - GET /platform/me                                              │ │
-│  │  - GET /platform/organizations                                   │ │
-│  │  - GET /platform/projects/:orgId                                 │ │
-│  │  - GET /platform/tenant/:projectId                               │ │
-│  │  - PUT /platform/tenant/:projectId/:status                       │ │
-│  │  - GET /platform/login (initiate OAuth2)                         │ │
-│  │  - GET /platform/connect/project/:projectId (provision tenant)   │ │
-│  │  - GET /platform/oauth2/callback (OAuth2 callback)               │ │
-│  └───────────────────────────────────────────────────────────────────┘ │
-│  ┌───────────────────────────────────────────────────────────────────┐ │
-│  │  AppService (core logic)                                         │ │
-│  │  - getTenant(), createTenant(), updateTenant()                   │ │
-│  │  - createSupaClient() – uses Vault-stored tokens                │ │
-│  └───────────────────────────────────────────────────────────────────┘ │
+│  ┌───────────────────────────────────────────────────────────────────┐  │ 
+│  │  @UseGuards(withSupabase) – validates JWT, injects userClaims     │  │
+│  └───────────────────────────────────────────────────────────────────┘  │
+│  ┌───────────────────────────────────────────────────────────────────┐  │
+│  │  AppController (REST endpoints)                                   │  │
+│  │  - GET /platform/me                                               │  │
+│  │  - GET /platform/organizations                                    │  │
+│  │  - GET /platform/projects/:orgId                                  │  │
+│  │  - GET /platform/tenant/:projectId                                │  │
+│  │  - PUT /platform/tenant/:projectId/:status                        │  │
+│  │  - GET /platform/login (initiate OAuth2)                          │  │
+│  │  - GET /platform/connect/project/:projectId (provision tenant)    │  │
+│  │  - GET /platform/oauth2/callback (OAuth2 callback)                │  │
+│  └───────────────────────────────────────────────────────────────────┘  │
+│  ┌───────────────────────────────────────────────────────────────────┐  │
+│  │  AppService (core logic)                                          │  │
+│  │  - getTenant(), createTenant(), updateTenant()                    │  │
+│  │  - createSupaClient() – uses Vault-stored tokens                  │  │
+│  └───────────────────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                   HashiCorp Vault                                       │
-│  ┌─────────────────────────────────────────────────────────────────────┐ │
-│  │  secret/users/{userId}          → OAuth2 session tokens            │ │
-│  │  secret/tenants/{userId}/{projectId} → Tenant records & DB creds   │ │
-│  └─────────────────────────────────────────────────────────────────────┘ │
+│  ┌─────────────────────────────────────────────────────────────────────┐│
+│  │  secret/users/{userId}          → OAuth2 session tokens             ││
+│  │  secret/tenants/{userId}/{projectId} → Tenant records & DB creds    ││
+│  └─────────────────────────────────────────────────────────────────────┘│
 └─────────────────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                          Supabase (x2)                                  │
-│  ┌─────────────────────────────┐  ┌──────────────────────────────────┐ │
-│  │  Your Platform's Supabase   │  │  User's External Supabase        │ │
-│  │  - Auth (users table)       │  │  - PostgreSQL (per‑tenant user)  │ │
-│  │  - Management API           │  │  - Storage                       │ │
-│  └─────────────────────────────┘  └──────────────────────────────────┘ │
+│  ┌─────────────────────────────┐  ┌──────────────────────────────────┐  │
+│  │  Your Platform's Supabase   │  │  User's External Supabase        │  │
+│  │  - Auth (users table)       │  │  - PostgreSQL (per‑tenant user)  │  │
+│  │  - Management API           │  │  - Storage                       │  │
+│  └─────────────────────────────┘  └──────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
