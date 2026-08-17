@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 
 import { config, POOL_PORT, POOL_POSTFIX, vaultClientConfig } from './config';
 import ClientOAuth2 from 'client-oauth2';
-import * as vault from '@hashicorp/vault-client-typescript';
+import * as vault from 'vault-client-typescript';
 import { SupabaseSession, SupabaseTenant } from './types';
 import { SupabaseManagementAPI } from 'supabase-management-js';
 import {

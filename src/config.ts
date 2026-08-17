@@ -1,4 +1,4 @@
-import * as vault from '@hashicorp/vault-client-typescript';
+import * as vault from 'vault-client-typescript';
 
 export const config = {
   clientId: process.env.SUPA_CONNECT_CLIENT_ID,
