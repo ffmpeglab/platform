@@ -9,7 +9,9 @@ COPY . .
 
 RUN npm i -g @nestjs/cli
 
-RUN yarn && yarn build
+RUN yarn
+
+RUN yarn build
 
 # Expose port
 EXPOSE 7001
