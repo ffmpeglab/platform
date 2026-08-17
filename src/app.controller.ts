@@ -15,7 +15,19 @@ import type { SupabaseContext } from '@supabase/server';
 const oauth2Client = new ClientOAuth2(config);
 
 @Controller()
-@UseGuards(withSupabase({ auth: 'user' }))
+@UseGuards(
+  withSupabase({
+    auth: 'user',
+    env: {
+      url: process.env.SUPABASE_URL,
+      publishableKeys: {
+        default: process.env.SUPABASE_PUBLISHABLE_KEY as string,
+      },
+      secretKeys: { default: process.env.SUPABASE_SECRET_KEY as string },
+      jwks: new URL(process.env.SUPABASE_JWKS_URL as string),
+    },
+  }),
+)
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
@@ -76,12 +88,10 @@ export class AppController {
   }
 
   @Get('platform/login')
-  async platformLogin(
-    @Response() response,
-    @SupabaseCtx('userClaims') user: SupabaseContext['userClaims'],
-  ): Promise<any> {
-    const uri = oauth2Client.code.getUri();
-    response.redirect(uri);
+  platformLogin(): { redirectUri: string } {
+    console.info('platformloginstart');
+    const redirectUri = oauth2Client.code.getUri();
+    return { redirectUri };
   }
 
   @Get('platform/oauth2/callback')
