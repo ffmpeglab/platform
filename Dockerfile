@@ -11,6 +11,10 @@ RUN npm i -g @nestjs/cli
 
 RUN yarn
 
+RUN mkdir node_modules/@hashicorp
+
+RUN git clone https://github.com/hashicorp/vault-client-typescript node_modules/@hashicorp/vault-client-typescript
+
 RUN ls -1 node_modules
 
 RUN yarn build
