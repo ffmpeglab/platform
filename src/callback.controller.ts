@@ -15,7 +15,6 @@ export class CallbackController {
     @Session() session: Record<string, any>,
   ): Promise<void> {
     const oauthSession = await oauth2Client.code.getToken((req as Request).url);
-    console.info('oauthsession', { oauthSession, session });
     if (!oauthSession.accessToken || !session.user) {
       response.redirect(`${config.webAppRedirect}/error`);
       return;

@@ -21,7 +21,6 @@ export class AppService {
       .data as SupabaseSession;
     const sessionExpiresDate = session.created + session.expires;
     const isSessionValid = new Date().valueOf() < sessionExpiresDate;
-    console.info({ session, isSessionValid });
     if (!isSessionValid) {
       const oauthSession = await oauth2Client
         .createToken(session.accessToken as string, session.refreshToken as any)
@@ -41,7 +40,7 @@ export class AppService {
       accessToken: oauthSession.accessToken,
       refreshToken: oauthSession.refreshToken,
       created: new Date().valueOf(),
-      expires: parseInt(oauthSession.data.expires),
+      expires: 3600,
       refresh_token: oauthSession.refreshToken,
       access_token: oauthSession.accessToken,
     };
