@@ -13,10 +13,6 @@ RUN npm install
 
 RUN yarn build
 
-WORKDIR /app
-
-RUN yarn build
-
 # Expose port
 EXPOSE 7001
 
