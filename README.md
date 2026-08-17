@@ -220,7 +220,7 @@ SUPABASE_CLOUD_POSTGRES_POOLER_PORT=6543
 - **Two Supabase projects** (or one, but conceptually):
   1. **Platform Supabase** – handles authentication for your extension's users.
   2. **External Supabase** – the user's own project (they connect via OAuth2).
-- [Supabase Connect](https://supabase.com/docs/guides/platform/oauth-apps) configured for OAuth2.
+- [Supabase Connect](https://supabase.com/docs/guides/integrations/build-a-supabase-oauth-integration) configured for OAuth2.
 
 ### Installation
 
