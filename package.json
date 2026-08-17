@@ -28,6 +28,7 @@
     "@supabase/supabase-js": "^2.112.3",
     "@types/express-session": "^1.19.0",
     "@types/passport-local": "^1.0.38",
+    "vault-client-typescript": "^0.3.10",
     "client-oauth2": "^4.3.3",
     "dotenv": "^17.4.2",
     "express-session": "^1.19.0",
@@ -40,7 +41,6 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.18.0",
-    "vault-client-typescript": "^0.3.10",
     "@nestjs/cli": "^11.0.0",
     "@nestjs/schematics": "^11.0.0",
     "@nestjs/testing": "^11.0.1",
