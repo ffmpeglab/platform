@@ -8,7 +8,13 @@ import {
 } from '@nestjs/common';
 import { AppService } from './app.service';
 import ClientOAuth2 from 'client-oauth2';
-import { config } from './config';
+import {
+  config,
+  SUPABASE_PUBLISHABLE_KEY,
+  SUPABASE_URL,
+  SUPABASE_SECRET_KEY,
+  SUPABASE_JWKS_URL,
+} from './config';
 import { SupabaseSession } from './types';
 import { withSupabase, SupabaseCtx } from '@supabase/server/adapters/nestjs';
 import type { SupabaseContext } from '@supabase/server';
@@ -20,12 +26,12 @@ const oauth2Client = new ClientOAuth2(config);
   withSupabase({
     auth: 'user',
     env: {
-      url: process.env.SUPABASE_URL,
+      url: SUPABASE_URL,
       publishableKeys: {
-        default: process.env.SUPABASE_PUBLISHABLE_KEY as string,
+        default: SUPABASE_PUBLISHABLE_KEY,
       },
-      secretKeys: { default: process.env.SUPABASE_SECRET_KEY as string },
-      jwks: new URL(process.env.SUPABASE_JWKS_URL as string),
+      secretKeys: { default: SUPABASE_SECRET_KEY as string },
+      jwks: new URL(SUPABASE_JWKS_URL as string),
     },
   }),
 )

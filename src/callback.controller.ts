@@ -13,9 +13,14 @@ export class CallbackController {
     @Request() req,
     @Response() response,
     @Session() session: Record<string, any>,
-  ): Promise<void> {
+  ): Promise<void | { error: string }> {
+    if (!session.user) {
+      return { error: 'unauthorized' };
+    }
+
     const oauthSession = await oauth2Client.code.getToken((req as Request).url);
-    if (!oauthSession.accessToken || !session.user) {
+
+    if (!oauthSession.accessToken) {
       response.redirect(`${config.webAppRedirect}/error`);
       return;
     }

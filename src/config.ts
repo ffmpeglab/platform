@@ -10,6 +10,10 @@ export const config = {
 };
 
 export const SUPABASE_URL = process.env.SUPABASE_URL;
+export const SUPABASE_PUBLISHABLE_KEY = process.env
+  .SUPABASE_PUBLISHABLE_KEY as string;
+export const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY as string;
+export const SUPABASE_JWKS_URL = process.env.SUPABASE_JWKS_URL as string;
 
 export const POOL_POSTFIX =
   process.env.SUPABASE_CLOUD_POSTGRES_POOLER_URL || '.pooler.supabase.com';
