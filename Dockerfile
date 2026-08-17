@@ -1,7 +1,7 @@
 FROM node:24-alpine AS builder
 WORKDIR /app
 
-RUN apt install git
+RUN apk install git
 # Ensure production runtime defaults
 ENV NODE_ENV=production
 
