@@ -286,6 +286,103 @@ npm test
 
 ---
 
+## 🧭 Deployment & Infrastructure
+
+The FFmpegLab Platform is designed to be deployed behind a reverse proxy, typically **nginx**, which handles routing, CORS headers, and domain restrictions. This setup ensures that all services (API, Platform, Supabase) are served from a **single domain**, preventing cross-origin issues and centralising access control.
+
+A production‑grade nginx configuration (similar to the one used in the [FFmpegLab WebApp](https://github.com/ffmpeglab/webapp/blob/main/nginx.conf)) looks like this:
+
+```nginx
+upstream api {
+    server ${FFMPEGLAB_API_FQDN};
+}
+
+upstream platform {
+    server ${FFMPEGLAB_PLATFORM_FQDN};
+}
+
+upstream supabase {
+    server ${SUPABASE_FQDN};
+}
+
+server {
+    listen ${FFMPEGLAB_UI_PORT};
+    server_name frontend;
+    root /usr/share/nginx/html;
+
+    # Security headers – enforce cross-origin isolation
+    add_header cross-origin-embedder-policy "require-corp";
+    add_header cross-origin-opener-policy "cross-origin";
+    add_header cross-origin-resource-policy "cross-origin";
+
+    # Serve the static frontend
+    location / {
+        try_files $${ESCAPED_URI} /webapp/index.html;
+    }
+
+    location /webapp/ {
+        try_files $${ESCAPED_URI} /webapp/index.html;
+    }
+
+    location = /config.json {
+        try_files $${ESCAPED_URI} $${ESCAPED_URI}/ /webapp/config.json;
+    }
+
+    location = /templates.json {
+        try_files $${ESCAPED_URI} $${ESCAPED_URI}/ /webapp/templates.json;
+    }
+
+    # Proxy requests to the respective backends
+    location /auth/ {
+        proxy_pass http://supabase;
+    }
+
+    location /rest/ {
+        proxy_pass http://supabase;
+    }
+
+    location /storage/ {
+        proxy_pass http://supabase;
+    }
+
+    location /platform/ {
+        proxy_pass http://platform;
+    }
+
+    location /api {
+        proxy_pass http://api;
+    }
+
+    location /renders/ {
+        proxy_pass http://api;
+    }
+
+    location /files/ {
+        proxy_pass http://api;
+    }
+
+    location /pipelines/ {
+        proxy_pass http://api;
+    }
+}
+```
+
+### How This Works with the Platform
+
+- **Single‑Domain Architecture** – All traffic enters through a single nginx instance, which routes requests to the correct upstream service based on the URL path. This eliminates CORS preflight requests and simplifies client‑side configuration.
+- **Security Headers** – The `cross-origin-*` headers enforce a strict cross‑origin isolation policy, which is required for features like `SharedArrayBuffer` and helps prevent side‑channel attacks.
+- **Path‑Based Routing** – Requests to `/platform/` are proxied directly to the FFmpegLab Platform service, while `/auth/`, `/rest/`, and `/storage/` go to Supabase, and `/api`, `/renders/`, `/files/`, and `/pipelines/` go to the main API service.
+- **Restricted Domain** – By configuring nginx to listen on a specific domain and not exposing individual services directly, you ensure that the Platform can only be accessed through the approved frontend, reducing the attack surface.
+
+When deploying your own extension based on this template, you can adapt this nginx configuration to:
+- Point the `platform` upstream to your instance of this service.
+- Adjust the `api` upstream to your own business‑logic API (if you have one).
+- Keep or remove the other location blocks depending on which services you use.
+
+This setup gives you a clean, secure, and scalable foundation for running your Supabase extension in production.
+
+---
+
 ## License
 
 This project is licensed under the MIT License – see the [LICENSE](https://github.com/ffmpeglab/platform/blob/main/LICENSE) file for details.
