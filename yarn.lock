@@ -435,9 +435,9 @@
     "@eslint/core" "^0.17.0"
     levn "^0.4.1"
 
-"@hashicorp/vault-client-typescript@https://github.com/hashicorp/vault-client-typescript":
+"@hashicorp/vault-client-typescript@https://github.com/hashicorp/vault-client-typescript.git#main":
   version "0.0.0"
-  resolved "https://github.com/hashicorp/vault-client-typescript#6e9ab9e1bf2d8945038fb9d19bf44651356d5412"
+  resolved "https://github.com/hashicorp/vault-client-typescript.git#6e9ab9e1bf2d8945038fb9d19bf44651356d5412"
 
 "@humanfs/core@^0.19.2":
   version "0.19.2"
