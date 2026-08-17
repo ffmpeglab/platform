@@ -11,7 +11,7 @@ RUN npm i -g @nestjs/cli
 
 RUN yarn
 
-RUN ls node_modules
+RUN ls -1 node_modules
 
 RUN yarn build
 
