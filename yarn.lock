@@ -435,10 +435,6 @@
     "@eslint/core" "^0.17.0"
     levn "^0.4.1"
 
-"@hashicorp/vault-client-typescript@https://github.com/hashicorp/vault-client-typescript.git#main":
-  version "0.0.0"
-  resolved "https://github.com/hashicorp/vault-client-typescript.git#6e9ab9e1bf2d8945038fb9d19bf44651356d5412"
-
 "@humanfs/core@^0.19.2":
   version "0.19.2"
   resolved "https://registry.yarnpkg.com/@humanfs/core/-/core-0.19.2.tgz#a8272ca03b2acf492670222b2320b6c421bfde60"
@@ -5220,6 +5216,11 @@ vary@^1, vary@^1.1.2:
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/vary/-/vary-1.1.2.tgz#2299f02c6ded30d4a5961b0b9f74524a18f634fc"
   integrity sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg==
+
+vault-client-typescript@^0.3.0:
+  version "0.3.10"
+  resolved "https://registry.yarnpkg.com/vault-client-typescript/-/vault-client-typescript-0.3.10.tgz#caad02afe12fc1b596f01fd8dafd64994920471f"
+  integrity sha512-FHVz6ZPQnay+2BiUBvAz9K+PAt22RkluMSmbyrmdtpxcwPm8rwfHKUt8R6OWIJye3c4jXP9e2qK+OIEavot4Fg==
 
 walker@^1.0.8:
   version "1.0.8"
