@@ -15,10 +15,13 @@ export function createPostgresqlQueryForCredentials(creds: {
 }) {
   return `
     CREATE USER ${creds.user} WITH PASSWORD '${creds.password}' CREATEDB;
-    GRANT CREATE ON SCHEMA public to ${creds.user};
-    GRANT CREATE ON SCHEMA pgmq.q_renders to ${creds.user};
-    GRANT CREATE ON SCHEMA pgmq.q_file to ${creds.user};
-    GRANT CREATE ON SCHEMA pgmq.q_logs to ${creds.user};
+    GRANT ALL on table public.render to ${creds.user};
+    GRANT ALL on table public.pipeline to ${creds.user};
+    GRANT ALL on table public.log_piece to ${creds.user};
+    GRANT ALL on table public.api_key to ${creds.user};
+    GRANT ALL on table pgmq.q_renders to ${creds.user};
+    GRANT ALL on table pgmq.q_file to ${creds.user};
+    GRANT ALL on table pgmq.q_logs to ${creds.user};
   `;
 }
 
