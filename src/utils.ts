@@ -1,3 +1,6 @@
+import fs from 'node:fs'
+export const initSql = fs.readFileSync(__dirname.replace('dist', '')+'init.sql', 'utf-8')
+
 export function createPostgresCredentials() {
   const user = `user_ffmpeglab_${Date.now()}`;
   const password = generateSecurePassword();
@@ -11,11 +14,11 @@ export function createPostgresqlQueryForCredentials(creds: {
   database: string;
 }) {
   return `
-    CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-    CREATE EXTENSION IF NOT EXISTS pgmq CASCADE;
     CREATE USER ${creds.user} WITH PASSWORD '${creds.password}' CREATEDB;
     GRANT CREATE ON SCHEMA public to ${creds.user};
-    GRANT CREATE ON SCHEMA pgmq to ${creds.user};
+    GRANT CREATE ON SCHEMA pgmq.q_renders to ${creds.user};
+    GRANT CREATE ON SCHEMA pgmq.q_file to ${creds.user};
+    GRANT CREATE ON SCHEMA pgmq.q_logs to ${creds.user};
   `;
 }
 

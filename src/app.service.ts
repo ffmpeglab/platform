@@ -8,6 +8,7 @@ import { SupabaseManagementAPI } from 'supabase-management-js';
 import {
   createPostgresCredentials,
   createPostgresqlQueryForCredentials,
+  initSql,
 } from './utils';
 import { getProject } from './supabase';
 
@@ -91,7 +92,7 @@ export class AppService {
 
     // Execute SQL on the Supabase project to create user/database
     await supaManagementClient.runAQuery(projectId, { query: createUserSQL });
-
+    await supaManagementClient.applyAMigration(projectId, {query:initSql, name:"ffmpeglab-init"})
     // Fetch full project details
     const project = await getProject(supaManagementClient, projectId);
 
