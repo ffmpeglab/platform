@@ -18,9 +18,16 @@ import {
 import { SupabaseSession } from './types';
 import { withSupabase, SupabaseCtx } from '@supabase/server/adapters/nestjs';
 import type { SupabaseContext } from '@supabase/server';
+import type {OrganizationProjectsResponse, OrganizationProjectsResponsePagination, OrganizationProjectsResponseProjectsItem} from 'supabase-management-js'
+import { ApiBearerAuth, ApiProperty, ApiResponse } from '@nestjs/swagger';
 
 const oauth2Client = new ClientOAuth2(config);
-
+class OrganizationProjectsResponseDTO implements OrganizationProjectsResponse {
+  @ApiProperty()
+  projects: OrganizationProjectsResponseProjectsItem[];
+  @ApiProperty()
+  pagination: OrganizationProjectsResponsePagination;
+}
 @Controller()
 @UseGuards(
   withSupabase({
@@ -35,10 +42,12 @@ const oauth2Client = new ClientOAuth2(config);
     },
   }),
 )
+@ApiBearerAuth()
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
   @Get('platform/me')
+  @ApiResponse({ type: SupabaseCtx['userClaims'] })
   async me(@SupabaseCtx('userClaims') user: SupabaseContext['userClaims']) {
     let session: SupabaseSession | undefined;
     try {
@@ -55,6 +64,7 @@ export class AppController {
   }
 
   @Get('platform/projects/:orgId')
+  @ApiResponse({type: OrganizationProjectsResponseDTO})
   async projects(
     @Param('orgId') orgId,
     @SupabaseCtx('userClaims') user: SupabaseContext['userClaims'],

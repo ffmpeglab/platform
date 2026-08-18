@@ -90,15 +90,18 @@ export class AppService {
     const dbCreds = createPostgresCredentials();
     const createUserSQL = createPostgresqlQueryForCredentials(dbCreds);
 
-    // Execute SQL on the Supabase project to create user/database
-    await supaManagementClient.runAQuery(projectId, { query: createUserSQL });
+    // Execute SQL on the Supabase project to create database tables
     await supaManagementClient.applyAMigration(projectId, {query:initSql, name:"ffmpeglab-init"})
+    
+    // Execute SQL on the Supabase project to create user and give permissions for database tables
+    await supaManagementClient.applyAMigration(projectId, { query: createUserSQL, name:"ffmpeglab-permissions" });
+    
     // Fetch full project details
     const project = await getProject(supaManagementClient, projectId);
 
     // Build tenant record
     const poolPort = POOL_PORT;
-    const poolHost = `aws-0-${project.region}${POOL_POSTFIX}`;
+    const poolHost = `aws-1-${project.region}${POOL_POSTFIX}`;
     const now = Date.now();
     const dbUserName = dbCreds.user + '.' + projectId;
     const newTenant: SupabaseTenant = {
