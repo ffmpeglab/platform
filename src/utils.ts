@@ -1,5 +1,8 @@
-import fs from 'node:fs'
-export const initSql = fs.readFileSync(__dirname.replace('dist', '')+'init.sql', 'utf-8')
+import fs from 'node:fs';
+export const initSql = fs.readFileSync(
+  __dirname.replace('dist', '') + 'init.sql',
+  'utf-8',
+);
 
 export function createPostgresCredentials() {
   const user = `user_ffmpeglab_${Date.now()}`;

@@ -15,19 +15,12 @@ import {
   SUPABASE_SECRET_KEY,
   SUPABASE_JWKS_URL,
 } from './config';
-import { SupabaseSession } from './types';
+import { SupabaseSession, OrganizationProjectsResponseDTO } from './types';
 import { withSupabase, SupabaseCtx } from '@supabase/server/adapters/nestjs';
 import type { SupabaseContext } from '@supabase/server';
-import type {OrganizationProjectsResponse, OrganizationProjectsResponsePagination, OrganizationProjectsResponseProjectsItem} from 'supabase-management-js'
 import { ApiBearerAuth, ApiProperty, ApiResponse } from '@nestjs/swagger';
 
 const oauth2Client = new ClientOAuth2(config);
-class OrganizationProjectsResponseDTO implements OrganizationProjectsResponse {
-  @ApiProperty()
-  projects: OrganizationProjectsResponseProjectsItem[];
-  @ApiProperty()
-  pagination: OrganizationProjectsResponsePagination;
-}
 @Controller()
 @UseGuards(
   withSupabase({
@@ -42,7 +35,7 @@ class OrganizationProjectsResponseDTO implements OrganizationProjectsResponse {
     },
   }),
 )
-@ApiBearerAuth()
+@ApiBearerAuth('user')
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
@@ -64,7 +57,7 @@ export class AppController {
   }
 
   @Get('platform/projects/:orgId')
-  @ApiResponse({type: OrganizationProjectsResponseDTO})
+  @ApiResponse({ type: OrganizationProjectsResponseDTO })
   async projects(
     @Param('orgId') orgId,
     @SupabaseCtx('userClaims') user: SupabaseContext['userClaims'],
@@ -116,7 +109,7 @@ export class AppController {
     return (await supaManagementClient.listAllOrganizations()).data;
   }
 
-  @Get('platform/login')
+  @Get('platform/connect')
   platformLogin(
     @Session() session: Record<string, any>,
     @SupabaseCtx('userClaims') user: SupabaseContext['userClaims'],

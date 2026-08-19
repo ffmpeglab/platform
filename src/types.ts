@@ -1,5 +1,12 @@
 import { getProject } from './supabase';
 
+export class OrganizationProjectsResponseDTO implements OrganizationProjectsResponse {
+  @ApiProperty()
+  projects: OrganizationProjectsResponseProjectsItem[];
+  @ApiProperty()
+  pagination: OrganizationProjectsResponsePagination;
+}
+
 export interface SupabaseSession {
   created: number;
   expires: number;

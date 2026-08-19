@@ -91,11 +91,17 @@ export class AppService {
     const createUserSQL = createPostgresqlQueryForCredentials(dbCreds);
 
     // Execute SQL on the Supabase project to create database tables
-    await supaManagementClient.applyAMigration(projectId, {query:initSql, name:"ffmpeglab-init"})
-    
+    await supaManagementClient.applyAMigration(projectId, {
+      query: initSql,
+      name: 'ffmpeglab-init',
+    });
+
     // Execute SQL on the Supabase project to create user and give permissions for database tables
-    await supaManagementClient.applyAMigration(projectId, { query: createUserSQL, name:"ffmpeglab-permissions" });
-    
+    await supaManagementClient.applyAMigration(projectId, {
+      query: createUserSQL,
+      name: 'ffmpeglab-permissions',
+    });
+
     // Fetch full project details
     const project = await getProject(supaManagementClient, projectId);
 
