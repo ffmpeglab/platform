@@ -17,7 +17,7 @@ Name | Type
 ## Example
 
 ```typescript
-import type { UpdateCustomHostnameResponseDataResult } from 'ffmpeglab-sdk'
+import type { UpdateCustomHostnameResponseDataResult } from 'ffmpeglab-platform-sdk'
 
 // TODO: Update the object below with actual values
 const example = {

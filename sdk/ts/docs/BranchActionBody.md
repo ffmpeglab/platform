@@ -11,7 +11,7 @@ Name | Type
 ## Example
 
 ```typescript
-import type { BranchActionBody } from 'ffmpeglab-sdk'
+import type { BranchActionBody } from 'ffmpeglab-platform-sdk'
 
 // TODO: Update the object below with actual values
 const example = {

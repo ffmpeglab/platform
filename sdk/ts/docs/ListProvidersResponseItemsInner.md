@@ -15,7 +15,7 @@ Name | Type
 ## Example
 
 ```typescript
-import type { ListProvidersResponseItemsInner } from 'ffmpeglab-sdk'
+import type { ListProvidersResponseItemsInner } from 'ffmpeglab-platform-sdk'
 
 // TODO: Update the object below with actual values
 const example = {

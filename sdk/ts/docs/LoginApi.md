@@ -21,11 +21,11 @@ All URIs are relative to *http://localhost*
 import {
   Configuration,
   LoginApi,
-} from 'ffmpeglab-sdk';
-import type { LoginControllerPlatformLoginRequest } from 'ffmpeglab-sdk';
+} from 'ffmpeglab-platform-sdk';
+import type { LoginControllerPlatformLoginRequest } from 'ffmpeglab-platform-sdk';
 
 async function example() {
-  console.log("🚀 Testing ffmpeglab-sdk SDK...");
+  console.log("🚀 Testing ffmpeglab-platform-sdk SDK...");
   const api = new LoginApi();
 
   try {
@@ -78,11 +78,11 @@ No authorization required
 import {
   Configuration,
   LoginApi,
-} from 'ffmpeglab-sdk';
-import type { LoginControllerPlatformLoginCallbackRequest } from 'ffmpeglab-sdk';
+} from 'ffmpeglab-platform-sdk';
+import type { LoginControllerPlatformLoginCallbackRequest } from 'ffmpeglab-platform-sdk';
 
 async function example() {
-  console.log("🚀 Testing ffmpeglab-sdk SDK...");
+  console.log("🚀 Testing ffmpeglab-platform-sdk SDK...");
   const api = new LoginApi();
 
   try {

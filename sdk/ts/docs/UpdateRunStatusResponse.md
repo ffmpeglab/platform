@@ -11,7 +11,7 @@ Name | Type
 ## Example
 
 ```typescript
-import type { UpdateRunStatusResponse } from 'ffmpeglab-sdk'
+import type { UpdateRunStatusResponse } from 'ffmpeglab-platform-sdk'
 
 // TODO: Update the object below with actual values
 const example = {

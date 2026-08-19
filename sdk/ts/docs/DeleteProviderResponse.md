@@ -15,7 +15,7 @@ Name | Type
 ## Example
 
 ```typescript
-import type { DeleteProviderResponse } from 'ffmpeglab-sdk'
+import type { DeleteProviderResponse } from 'ffmpeglab-platform-sdk'
 
 // TODO: Update the object below with actual values
 const example = {

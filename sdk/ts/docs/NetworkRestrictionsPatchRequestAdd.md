@@ -12,7 +12,7 @@ Name | Type
 ## Example
 
 ```typescript
-import type { NetworkRestrictionsPatchRequestAdd } from 'ffmpeglab-sdk'
+import type { NetworkRestrictionsPatchRequestAdd } from 'ffmpeglab-platform-sdk'
 
 // TODO: Update the object below with actual values
 const example = {

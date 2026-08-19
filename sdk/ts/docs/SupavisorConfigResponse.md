@@ -21,7 +21,7 @@ Name | Type
 ## Example
 
 ```typescript
-import type { SupavisorConfigResponse } from 'ffmpeglab-sdk'
+import type { SupavisorConfigResponse } from 'ffmpeglab-platform-sdk'
 
 // TODO: Update the object below with actual values
 const example = {

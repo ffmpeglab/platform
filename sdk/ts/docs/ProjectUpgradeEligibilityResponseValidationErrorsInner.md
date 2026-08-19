@@ -24,7 +24,7 @@ Name | Type
 ## Example
 
 ```typescript
-import type { ProjectUpgradeEligibilityResponseValidationErrorsInner } from 'ffmpeglab-sdk'
+import type { ProjectUpgradeEligibilityResponseValidationErrorsInner } from 'ffmpeglab-platform-sdk'
 
 // TODO: Update the object below with actual values
 const example = {

@@ -49,7 +49,7 @@ Name | Type
 ## Example
 
 ```typescript
-import type { UpdatePostgresConfigBody } from 'ffmpeglab-sdk'
+import type { UpdatePostgresConfigBody } from 'ffmpeglab-platform-sdk'
 
 // TODO: Update the object below with actual values
 const example = {

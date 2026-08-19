@@ -14,7 +14,7 @@ Name | Type
 ## Example
 
 ```typescript
-import type { JitAccessResponseUserRolesInner } from 'ffmpeglab-sdk'
+import type { JitAccessResponseUserRolesInner } from 'ffmpeglab-platform-sdk'
 
 // TODO: Update the object below with actual values
 const example = {

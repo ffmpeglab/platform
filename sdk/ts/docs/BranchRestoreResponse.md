@@ -11,7 +11,7 @@ Name | Type
 ## Example
 
 ```typescript
-import type { BranchRestoreResponse } from 'ffmpeglab-sdk'
+import type { BranchRestoreResponse } from 'ffmpeglab-platform-sdk'
 
 // TODO: Update the object below with actual values
 const example = {

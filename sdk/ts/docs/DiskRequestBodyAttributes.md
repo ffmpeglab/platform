@@ -14,7 +14,7 @@ Name | Type
 ## Example
 
 ```typescript
-import type { DiskRequestBodyAttributes } from 'ffmpeglab-sdk'
+import type { DiskRequestBodyAttributes } from 'ffmpeglab-platform-sdk'
 
 // TODO: Update the object below with actual values
 const example = {

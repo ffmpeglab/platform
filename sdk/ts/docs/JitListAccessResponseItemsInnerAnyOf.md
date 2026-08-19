@@ -15,7 +15,7 @@ Name | Type
 ## Example
 
 ```typescript
-import type { JitListAccessResponseItemsInnerAnyOf } from 'ffmpeglab-sdk'
+import type { JitListAccessResponseItemsInnerAnyOf } from 'ffmpeglab-platform-sdk'
 
 // TODO: Update the object below with actual values
 const example = {

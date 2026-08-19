@@ -14,7 +14,7 @@ Name | Type
 ## Example
 
 ```typescript
-import type { CreateApiKeyBody } from 'ffmpeglab-sdk'
+import type { CreateApiKeyBody } from 'ffmpeglab-platform-sdk'
 
 // TODO: Update the object below with actual values
 const example = {

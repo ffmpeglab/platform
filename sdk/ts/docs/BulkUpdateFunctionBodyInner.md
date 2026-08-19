@@ -21,7 +21,7 @@ Name | Type
 ## Example
 
 ```typescript
-import type { BulkUpdateFunctionBodyInner } from 'ffmpeglab-sdk'
+import type { BulkUpdateFunctionBodyInner } from 'ffmpeglab-platform-sdk'
 
 // TODO: Update the object below with actual values
 const example = {

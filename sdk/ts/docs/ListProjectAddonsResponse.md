@@ -12,7 +12,7 @@ Name | Type
 ## Example
 
 ```typescript
-import type { ListProjectAddonsResponse } from 'ffmpeglab-sdk'
+import type { ListProjectAddonsResponse } from 'ffmpeglab-platform-sdk'
 
 // TODO: Update the object below with actual values
 const example = {

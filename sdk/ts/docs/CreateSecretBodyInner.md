@@ -12,7 +12,7 @@ Name | Type
 ## Example
 
 ```typescript
-import type { CreateSecretBodyInner } from 'ffmpeglab-sdk'
+import type { CreateSecretBodyInner } from 'ffmpeglab-platform-sdk'
 
 // TODO: Update the object below with actual values
 const example = {

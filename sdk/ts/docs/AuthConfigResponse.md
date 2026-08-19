@@ -247,7 +247,7 @@ Name | Type
 ## Example
 
 ```typescript
-import type { AuthConfigResponse } from 'ffmpeglab-sdk'
+import type { AuthConfigResponse } from 'ffmpeglab-platform-sdk'
 
 // TODO: Update the object below with actual values
 const example = {

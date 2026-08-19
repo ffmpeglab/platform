@@ -12,7 +12,7 @@ Name | Type
 ## Example
 
 ```typescript
-import type { NetworkRestrictionsV2ResponseOldConfig } from 'ffmpeglab-sdk'
+import type { NetworkRestrictionsV2ResponseOldConfig } from 'ffmpeglab-platform-sdk'
 
 // TODO: Update the object below with actual values
 const example = {

@@ -12,7 +12,7 @@ Name | Type
 ## Example
 
 ```typescript
-import type { StorageConfigResponseCapabilities } from 'ffmpeglab-sdk'
+import type { StorageConfigResponseCapabilities } from 'ffmpeglab-platform-sdk'
 
 // TODO: Update the object below with actual values
 const example = {

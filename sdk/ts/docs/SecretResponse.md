@@ -13,7 +13,7 @@ Name | Type
 ## Example
 
 ```typescript
-import type { SecretResponse } from 'ffmpeglab-sdk'
+import type { SecretResponse } from 'ffmpeglab-platform-sdk'
 
 // TODO: Update the object below with actual values
 const example = {

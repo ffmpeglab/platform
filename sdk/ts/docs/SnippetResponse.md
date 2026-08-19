@@ -22,7 +22,7 @@ Name | Type
 ## Example
 
 ```typescript
-import type { SnippetResponse } from 'ffmpeglab-sdk'
+import type { SnippetResponse } from 'ffmpeglab-platform-sdk'
 
 // TODO: Update the object below with actual values
 const example = {

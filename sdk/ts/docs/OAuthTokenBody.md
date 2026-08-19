@@ -20,7 +20,7 @@ Name | Type
 ## Example
 
 ```typescript
-import type { OAuthTokenBody } from 'ffmpeglab-sdk'
+import type { OAuthTokenBody } from 'ffmpeglab-platform-sdk'
 
 // TODO: Update the object below with actual values
 const example = {

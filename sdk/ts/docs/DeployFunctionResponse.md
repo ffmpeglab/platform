@@ -22,7 +22,7 @@ Name | Type
 ## Example
 
 ```typescript
-import type { DeployFunctionResponse } from 'ffmpeglab-sdk'
+import type { DeployFunctionResponse } from 'ffmpeglab-platform-sdk'
 
 // TODO: Update the object below with actual values
 const example = {

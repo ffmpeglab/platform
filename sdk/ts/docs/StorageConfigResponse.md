@@ -16,7 +16,7 @@ Name | Type
 ## Example
 
 ```typescript
-import type { StorageConfigResponse } from 'ffmpeglab-sdk'
+import type { StorageConfigResponse } from 'ffmpeglab-platform-sdk'
 
 // TODO: Update the object below with actual values
 const example = {

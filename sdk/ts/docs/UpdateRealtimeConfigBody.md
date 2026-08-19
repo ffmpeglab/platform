@@ -22,7 +22,7 @@ Name | Type
 ## Example
 
 ```typescript
-import type { UpdateRealtimeConfigBody } from 'ffmpeglab-sdk'
+import type { UpdateRealtimeConfigBody } from 'ffmpeglab-platform-sdk'
 
 // TODO: Update the object below with actual values
 const example = {

@@ -26,11 +26,11 @@ All URIs are relative to *http://localhost*
 import {
   Configuration,
   AppApi,
-} from 'ffmpeglab-sdk';
-import type { AppControllerConnectProjectRequest } from 'ffmpeglab-sdk';
+} from 'ffmpeglab-platform-sdk';
+import type { AppControllerConnectProjectRequest } from 'ffmpeglab-platform-sdk';
 
 async function example() {
-  console.log("🚀 Testing ffmpeglab-sdk SDK...");
+  console.log("🚀 Testing ffmpeglab-platform-sdk SDK...");
   const api = new AppApi();
 
   const body = {
@@ -91,11 +91,11 @@ No authorization required
 import {
   Configuration,
   AppApi,
-} from 'ffmpeglab-sdk';
-import type { AppControllerGetTenantRequest } from 'ffmpeglab-sdk';
+} from 'ffmpeglab-platform-sdk';
+import type { AppControllerGetTenantRequest } from 'ffmpeglab-platform-sdk';
 
 async function example() {
-  console.log("🚀 Testing ffmpeglab-sdk SDK...");
+  console.log("🚀 Testing ffmpeglab-platform-sdk SDK...");
   const api = new AppApi();
 
   const body = {
@@ -156,11 +156,11 @@ No authorization required
 import {
   Configuration,
   AppApi,
-} from 'ffmpeglab-sdk';
-import type { AppControllerMeRequest } from 'ffmpeglab-sdk';
+} from 'ffmpeglab-platform-sdk';
+import type { AppControllerMeRequest } from 'ffmpeglab-platform-sdk';
 
 async function example() {
-  console.log("🚀 Testing ffmpeglab-sdk SDK...");
+  console.log("🚀 Testing ffmpeglab-platform-sdk SDK...");
   const api = new AppApi();
 
   try {
@@ -213,11 +213,11 @@ No authorization required
 import {
   Configuration,
   AppApi,
-} from 'ffmpeglab-sdk';
-import type { AppControllerOrganizationsRequest } from 'ffmpeglab-sdk';
+} from 'ffmpeglab-platform-sdk';
+import type { AppControllerOrganizationsRequest } from 'ffmpeglab-platform-sdk';
 
 async function example() {
-  console.log("🚀 Testing ffmpeglab-sdk SDK...");
+  console.log("🚀 Testing ffmpeglab-platform-sdk SDK...");
   const api = new AppApi();
 
   try {
@@ -270,11 +270,11 @@ No authorization required
 import {
   Configuration,
   AppApi,
-} from 'ffmpeglab-sdk';
-import type { AppControllerPlatformLoginRequest } from 'ffmpeglab-sdk';
+} from 'ffmpeglab-platform-sdk';
+import type { AppControllerPlatformLoginRequest } from 'ffmpeglab-platform-sdk';
 
 async function example() {
-  console.log("🚀 Testing ffmpeglab-sdk SDK...");
+  console.log("🚀 Testing ffmpeglab-platform-sdk SDK...");
   const api = new AppApi();
 
   try {
@@ -327,11 +327,11 @@ No authorization required
 import {
   Configuration,
   AppApi,
-} from 'ffmpeglab-sdk';
-import type { AppControllerProjectsRequest } from 'ffmpeglab-sdk';
+} from 'ffmpeglab-platform-sdk';
+import type { AppControllerProjectsRequest } from 'ffmpeglab-platform-sdk';
 
 async function example() {
-  console.log("🚀 Testing ffmpeglab-sdk SDK...");
+  console.log("🚀 Testing ffmpeglab-platform-sdk SDK...");
   const api = new AppApi();
 
   const body = {
@@ -392,11 +392,11 @@ No authorization required
 import {
   Configuration,
   AppApi,
-} from 'ffmpeglab-sdk';
-import type { AppControllerToggleTenantRequest } from 'ffmpeglab-sdk';
+} from 'ffmpeglab-platform-sdk';
+import type { AppControllerToggleTenantRequest } from 'ffmpeglab-platform-sdk';
 
 async function example() {
-  console.log("🚀 Testing ffmpeglab-sdk SDK...");
+  console.log("🚀 Testing ffmpeglab-platform-sdk SDK...");
   const api = new AppApi();
 
   const body = {

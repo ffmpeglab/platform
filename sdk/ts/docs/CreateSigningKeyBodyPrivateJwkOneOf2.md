@@ -19,7 +19,7 @@ Name | Type
 ## Example
 
 ```typescript
-import type { CreateSigningKeyBodyPrivateJwkOneOf2 } from 'ffmpeglab-sdk'
+import type { CreateSigningKeyBodyPrivateJwkOneOf2 } from 'ffmpeglab-platform-sdk'
 
 // TODO: Update the object below with actual values
 const example = {

@@ -12,7 +12,7 @@ Name | Type
 ## Example
 
 ```typescript
-import type { SnippetList } from 'ffmpeglab-sdk'
+import type { SnippetList } from 'ffmpeglab-platform-sdk'
 
 // TODO: Update the object below with actual values
 const example = {

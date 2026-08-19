@@ -14,7 +14,7 @@ Name | Type
 ## Example
 
 ```typescript
-import type { OAuthTokenResponse } from 'ffmpeglab-sdk'
+import type { OAuthTokenResponse } from 'ffmpeglab-platform-sdk'
 
 // TODO: Update the object below with actual values
 const example = {

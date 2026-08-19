@@ -12,7 +12,7 @@ Name | Type
 ## Example
 
 ```typescript
-import type { RegionsInfoRecommendations } from 'ffmpeglab-sdk'
+import type { RegionsInfoRecommendations } from 'ffmpeglab-platform-sdk'
 
 // TODO: Update the object below with actual values
 const example = {

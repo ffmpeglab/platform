@@ -16,7 +16,7 @@ Name | Type
 ## Example
 
 ```typescript
-import type { SigningKeyResponse } from 'ffmpeglab-sdk'
+import type { SigningKeyResponse } from 'ffmpeglab-platform-sdk'
 
 // TODO: Update the object below with actual values
 const example = {
