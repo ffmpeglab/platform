@@ -1,18 +1,19 @@
+import { V1ProjectWithDatabaseResponseStatus } from 'supabase-management-js';
 import { getProject } from './supabase';
+import { ApiProperty } from '@nestjs/swagger';
 
-export class OrganizationProjectsResponseDTO implements OrganizationProjectsResponse {
+export class SupabaseSession {
   @ApiProperty()
-  projects: OrganizationProjectsResponseProjectsItem[];
-  @ApiProperty()
-  pagination: OrganizationProjectsResponsePagination;
-}
-
-export interface SupabaseSession {
   created: number;
+  @ApiProperty()
   expires: number;
+  @ApiProperty()
   refresh_token: string;
+  @ApiProperty()
   refreshToken?: string;
+  @ApiProperty()
   accessToken?: string;
+  @ApiProperty()
   access_token: string;
 }
 
@@ -34,4 +35,39 @@ export interface SupabaseTenant extends Awaited<ReturnType<typeof getProject>> {
   DB_PORT: number;
   DB_PASSWORD: string;
   DB_NAME: string;
+}
+
+export class SupabaseTenantDTO implements Omit<
+  SupabaseTenant,
+  | 'db'
+  | 'DB_HOST'
+  | 'DB_USER'
+  | 'DB_PORT'
+  | 'DB_PASSWORD'
+  | 'DB_NAME'
+  | 'database'
+  | 'organization_id'
+  | 'organization_slug'
+  | '(Missing)'
+> {
+  @ApiProperty()
+  id: string;
+  @ApiProperty()
+  created: number;
+  @ApiProperty()
+  updated: number;
+  @ApiProperty()
+  user: string;
+  @ApiProperty()
+  ffmpeglabStatus: 'on' | 'off';
+  @ApiProperty()
+  region: string;
+  @ApiProperty()
+  ref: string;
+  @ApiProperty({ enum: V1ProjectWithDatabaseResponseStatus })
+  status: V1ProjectWithDatabaseResponseStatus;
+  @ApiProperty()
+  name: string;
+  @ApiProperty()
+  created_at: string;
 }
