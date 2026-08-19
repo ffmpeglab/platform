@@ -41,3 +41,5 @@ export const supabaseEnv = {
   secretKeys: { default: SUPABASE_SECRET_KEY as string },
   jwks: new URL(SUPABASE_JWKS_URL as string),
 };
+
+export default {} 

@@ -18,7 +18,7 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "sdk-ts": "openapi-generator-cli generate -i https://platform.ffmpeglab.com/api-yaml -g typescript-fetch -o sdk/ts --openapi-generator-ignore-list 'README.md,package.json' --skip-validate-spec --additional-properties=npmName=ffmpeglab-sdk,supportsES6=true,npmVersion=0.3.0,withInterfaces=true"
+    "sdk-ts": "openapi-generator-cli generate -i http://localhost:7001/api-yaml -g typescript-fetch -o sdk/ts --openapi-generator-ignore-list 'README.md,package.json' --skip-validate-spec --additional-properties=npmName=ffmpeglab-sdk,supportsES6=true,npmVersion=0.3.0,withInterfaces=true && rm sdk/ts/src/models/JitListAccessResponseItemsInnerAnyOf1.ts && echo 'export default {}' > sdk/ts/src/models/JitListAccessResponseItemsInnerAnyOf1.ts && rm sdk/ts/src/models/JitListAccessResponseItemsInner.ts && echo 'export default {}' > sdk/ts/src/models/JitListAccessResponseItemsInner.ts && rm sdk/ts/src/models/JitListAccessResponseItemsInnerAnyOf.ts && echo 'export default {}' > sdk/ts/src/models/JitListAccessResponseItemsInnerAnyOf.ts && rm sdk/ts/src/models/JitListAccessResponse.ts && echo 'export default {}' > sdk/ts/src/models/JitListAccessResponse.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

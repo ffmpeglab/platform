@@ -14,7 +14,6 @@ Name | Type
 `dbPort` | number
 `dbName` | string
 `connectionString` | string
-`connectionString` | string
 `defaultPoolSize` | number
 `maxClientConn` | number
 `poolMode` | string
@@ -33,7 +32,6 @@ const example = {
   "dbHost": null,
   "dbPort": null,
   "dbName": null,
-  "connectionString": null,
   "connectionString": null,
   "defaultPoolSize": null,
   "maxClientConn": null,
