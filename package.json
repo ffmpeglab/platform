@@ -27,6 +27,7 @@
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/swagger": "^11.4.7",
     "@openapitools/openapi-generator-cli": "^2.40.1",
+    "@scalar/nestjs-api-reference": "^1.2.14",
     "@supabase/server": "^1.4.1",
     "@supabase/supabase-js": "^2.112.3",
     "@swc/cli": "^0.8.1",
