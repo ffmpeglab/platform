@@ -12,6 +12,9 @@ import { config, supabaseEnv } from './config';
 
 import { withSupabase, SupabaseCtx } from '@supabase/server/adapters/nestjs';
 import { getSupabaseProfile } from './supabase';
+import { ApiResponse } from '@nestjs/swagger';
+import { ConnectRedirectResponseDTO } from './types';
+
 const oauth2Client = new ClientOAuth2(config);
 
 @Controller()
@@ -25,6 +28,7 @@ export class LoginController {
   constructor(private readonly appService: AppService) {}
 
   @Get('platform/login')
+  @ApiResponse({ type: ConnectRedirectResponseDTO })
   platformLogin(): { redirectUri: string } {
     const redirectUri = oauth2Client.code.getUri();
     return { redirectUri };

@@ -1,17 +1,12 @@
 import ClientOAuth2 from 'client-oauth2';
 import { SupabaseManagementAPI } from 'supabase-management-js';
 import { profileUri } from './config';
+import { SupabaseProfile } from './types';
 
 export const getProject = async (
   supaManagementClient: SupabaseManagementAPI,
   projectId: string,
 ) => (await supaManagementClient.getProject(projectId)).data;
-
-export interface SupabaseProfile {
-  gotrue_id: string;
-  primary_email: string;
-  username: string;
-}
 
 export const getSupabaseProfile = async (session: ClientOAuth2.Token) =>
   (await (

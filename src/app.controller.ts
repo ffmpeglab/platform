@@ -9,10 +9,19 @@ import {
 import { AppService } from './app.service';
 import ClientOAuth2 from 'client-oauth2';
 import { config, supabaseEnv } from './config';
-import { SupabaseSession, SupabaseTenantDTO } from './types';
+import {
+  SupabaseSession,
+  SupabaseTenantDTO,
+  ConnectRedirectResponseDTO,
+} from './types';
 import { withSupabase, SupabaseCtx } from '@supabase/server/adapters/nestjs';
 import type { SupabaseContext } from '@supabase/server';
-import { ApiBearerAuth, ApiResponse, getSchemaPath } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiParam,
+  ApiResponse,
+  getSchemaPath,
+} from '@nestjs/swagger';
 
 const oauth2Client = new ClientOAuth2(config);
 @Controller()
@@ -122,6 +131,7 @@ export class AppController {
   }
 
   @Get('platform/connect')
+  @ApiResponse({ type: ConnectRedirectResponseDTO })
   platformLogin(
     @Session() session: Record<string, any>,
     @SupabaseCtx('userClaims') user: SupabaseContext['userClaims'],
@@ -132,6 +142,7 @@ export class AppController {
   }
 
   @Get('platform/connect/project/:projectId')
+  @ApiParam({ name: 'projectId' })
   async connectProject(
     @Param('projectId') projectId,
     @SupabaseCtx('userClaims') user: SupabaseContext['userClaims'],

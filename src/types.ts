@@ -37,6 +37,24 @@ export interface SupabaseTenant extends Awaited<ReturnType<typeof getProject>> {
   DB_NAME: string;
 }
 
+export class ConnectResponseDTO {
+  @ApiProperty()
+  status: 'on' | 'off';
+  @ApiProperty()
+  error: string;
+}
+
+export interface SupabaseProfile {
+  gotrue_id: string;
+  primary_email: string;
+  username: string;
+}
+
+export class ConnectRedirectResponseDTO {
+  @ApiProperty()
+  redirectUri: string;
+}
+
 export class SupabaseTenantDTO implements Omit<
   SupabaseTenant,
   | 'db'
