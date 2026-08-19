@@ -8,31 +8,18 @@ import {
 } from '@nestjs/common';
 import { AppService } from './app.service';
 import ClientOAuth2 from 'client-oauth2';
-import {
-  config,
-  SUPABASE_PUBLISHABLE_KEY,
-  SUPABASE_URL,
-  SUPABASE_SECRET_KEY,
-  SUPABASE_JWKS_URL,
-} from './config';
+import { config, supabaseEnv } from './config';
 import { SupabaseSession, OrganizationProjectsResponseDTO } from './types';
 import { withSupabase, SupabaseCtx } from '@supabase/server/adapters/nestjs';
 import type { SupabaseContext } from '@supabase/server';
-import { ApiBearerAuth, ApiProperty, ApiResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 
 const oauth2Client = new ClientOAuth2(config);
 @Controller()
 @UseGuards(
   withSupabase({
     auth: 'user',
-    env: {
-      url: SUPABASE_URL,
-      publishableKeys: {
-        default: SUPABASE_PUBLISHABLE_KEY,
-      },
-      secretKeys: { default: SUPABASE_SECRET_KEY as string },
-      jwks: new URL(SUPABASE_JWKS_URL as string),
-    },
+    env: supabaseEnv,
   }),
 )
 @ApiBearerAuth('user')

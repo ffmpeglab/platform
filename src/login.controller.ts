@@ -8,14 +8,7 @@ import {
 } from '@nestjs/common';
 import { AppService } from './app.service';
 import ClientOAuth2 from 'client-oauth2';
-import {
-  config,
-  SUPABASE_JWKS_URL,
-  SUPABASE_PUBLISHABLE_KEY,
-  SUPABASE_SECRET_KEY,
-  SUPABASE_URL,
-  supabaseEnv,
-} from './config';
+import { config, supabaseEnv } from './config';
 
 import { withSupabase, SupabaseCtx } from '@supabase/server/adapters/nestjs';
 import { getSupabaseProfile } from './supabase';
