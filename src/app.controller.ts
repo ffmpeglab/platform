@@ -141,6 +141,7 @@ export class AppController {
     @SupabaseCtx('userClaims') user: SupabaseContext['userClaims'],
   ): { redirectUri: string } {
     session.user = user?.id;
+    console.info('platform/connect/session.user', {user:session.user})
     const redirectUri = oauth2Client.code.getUri();
     return { redirectUri };
   }

@@ -47,6 +47,7 @@ export class LoginController {
       response.redirect(`${config.webAppRedirect}/error`);
       return;
     }
+    console.info("platform/oauth2/callback/session.user",{user:session.user})
     if (session.user) {
       await this.appService.saveOauthSession(session.user, oauthSession);
       return response.redirect(`${config.webAppRedirect}/success`);

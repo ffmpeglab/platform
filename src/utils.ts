@@ -24,6 +24,7 @@ export function createPostgresqlQueryForCredentials(creds: {
     GRANT ALL on table public.api_key to ${creds.user};
     GRANT ALL ON SCHEMA PGMQ TO ${creds.user};
     GRANT ALL on table pgmq.q_renders to ${creds.user};
+    GRANT ALL on table pgmq.q_render to ${creds.user};
     GRANT ALL on table pgmq.q_file to ${creds.user};
     GRANT ALL on table pgmq.q_logs to ${creds.user};
   `;
