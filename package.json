@@ -8,7 +8,7 @@
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "source .env && nest start",
+    "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
@@ -17,26 +17,33 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "sdk-ts": "openapi-generator-cli generate -i https://platform.ffmpeglab.com/api-yaml -g typescript-fetch -o sdk/ts --openapi-generator-ignore-list 'README.md,package.json' --additional-properties=npmName=ffmpeglab-sdk,supportsES6=true,npmVersion=0.3.0,withInterfaces=true"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
     "@nestjs/core": "^11.0.1",
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/swagger": "^11.4.7",
+    "@openapitools/openapi-generator-cli": "^2.40.1",
     "@supabase/server": "^1.4.1",
     "@supabase/supabase-js": "^2.112.3",
+    "@swc/cli": "^0.8.1",
+    "@swc/core": "^1.16.0",
     "@types/express-session": "^1.19.0",
+    "@types/js-yaml": "^4.0.9",
     "@types/passport-local": "^1.0.38",
-    "vault-client-typescript": "^0.3.10",
     "client-oauth2": "^4.3.3",
     "dotenv": "^17.4.2",
     "express-session": "^1.19.0",
+    "js-yaml": "^5.3.0",
     "passport": "^0.7.0",
     "passport-local": "^1.0.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
-    "supabase-management-js": "^2.0.2"
+    "supabase-management-js": "^2.0.2",
+    "vault-client-typescript": "^0.3.10"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",

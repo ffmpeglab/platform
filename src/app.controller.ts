@@ -8,37 +8,35 @@ import {
 } from '@nestjs/common';
 import { AppService } from './app.service';
 import ClientOAuth2 from 'client-oauth2';
+import { config, supabaseEnv } from './config';
 import {
-  config,
-  SUPABASE_PUBLISHABLE_KEY,
-  SUPABASE_URL,
-  SUPABASE_SECRET_KEY,
-  SUPABASE_JWKS_URL,
-} from './config';
-import { SupabaseSession } from './types';
+  SupabaseSession,
+  SupabaseTenantDTO,
+  ConnectRedirectResponseDTO,
+} from './types';
 import { withSupabase, SupabaseCtx } from '@supabase/server/adapters/nestjs';
 import type { SupabaseContext } from '@supabase/server';
+import {
+  ApiBearerAuth,
+  ApiParam,
+  ApiResponse,
+  getSchemaPath,
+} from '@nestjs/swagger';
 
 const oauth2Client = new ClientOAuth2(config);
-
 @Controller()
 @UseGuards(
   withSupabase({
     auth: 'user',
-    env: {
-      url: SUPABASE_URL,
-      publishableKeys: {
-        default: SUPABASE_PUBLISHABLE_KEY,
-      },
-      secretKeys: { default: SUPABASE_SECRET_KEY as string },
-      jwks: new URL(SUPABASE_JWKS_URL as string),
-    },
+    env: supabaseEnv,
   }),
 )
+@ApiBearerAuth('user')
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
   @Get('platform/me')
+  @ApiResponse({ type: SupabaseCtx['userClaims'] })
   async me(@SupabaseCtx('userClaims') user: SupabaseContext['userClaims']) {
     let session: SupabaseSession | undefined;
     try {
@@ -55,6 +53,14 @@ export class AppController {
   }
 
   @Get('platform/projects/:orgId')
+  @ApiResponse({
+    status: 200,
+    description: 'Successfully fetched projects for organization.',
+    schema: {
+      // 2. Reference the exact schema key name from your external YAML/JSON file
+      $ref: getSchemaPath('OrganizationProjectsResponse'),
+    },
+  })
   async projects(
     @Param('orgId') orgId,
     @SupabaseCtx('userClaims') user: SupabaseContext['userClaims'],
@@ -67,20 +73,27 @@ export class AppController {
   }
 
   @Get('platform/tenant/:id')
+  @ApiResponse({ type: SupabaseTenantDTO })
   async getTenant(
     @Param('projectId') projectId,
     @SupabaseCtx('userClaims') user: SupabaseContext['userClaims'],
   ) {
     const tenant = await this.appService.getTenant(user!.id, projectId);
-    return {
-      id: tenant?.id,
-      name: tenant?.name,
-      status: tenant?.status,
-      ffmpeglabStatus: tenant?.ffmpeglabStatus,
-      ref: tenant?.ref,
-      region: tenant?.region,
-      created: tenant?.created,
-    };
+    if (tenant?.id) {
+      const tenantDto = {
+        id: tenant.id,
+        name: tenant.name,
+        status: tenant.status,
+        ffmpeglabStatus: tenant.ffmpeglabStatus,
+        ref: tenant.ref,
+        region: tenant.region,
+        created: tenant.created,
+        created_at: tenant.created_at,
+        user: tenant.user,
+        updated: tenant.updated,
+      } as SupabaseTenantDTO;
+      return tenantDto;
+    }
   }
 
   @Put('platform/tenant/:id/:status')
@@ -97,6 +110,17 @@ export class AppController {
   }
 
   @Get('platform/organizations')
+  @ApiResponse({
+    status: 200,
+    description: 'Successfully fetched organizations.',
+    schema: {
+      type: 'array', // 1. Define the top-level type as an array
+      items: {
+        // 2. Reference the individual object schema inside the array
+        $ref: getSchemaPath('OrganizationResponseV1'),
+      },
+    },
+  })
   async organizations(
     @SupabaseCtx('userClaims') user: SupabaseContext['userClaims'],
   ) {
@@ -106,7 +130,8 @@ export class AppController {
     return (await supaManagementClient.listAllOrganizations()).data;
   }
 
-  @Get('platform/login')
+  @Get('platform/connect')
+  @ApiResponse({ type: ConnectRedirectResponseDTO })
   platformLogin(
     @Session() session: Record<string, any>,
     @SupabaseCtx('userClaims') user: SupabaseContext['userClaims'],
@@ -117,6 +142,7 @@ export class AppController {
   }
 
   @Get('platform/connect/project/:projectId')
+  @ApiParam({ name: 'projectId' })
   async connectProject(
     @Param('projectId') projectId,
     @SupabaseCtx('userClaims') user: SupabaseContext['userClaims'],

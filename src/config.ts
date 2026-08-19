@@ -24,9 +24,20 @@ export const POOL_PORT =
 export const FFMPEGLAB_PLATFORM_PORT =
   process.env.FFMPEGLAB_PLATFORM_PORT ?? 7001;
 
+export const profileUri = 'https://api.supabase.com/v1/get/profile';
+
 export const vaultClientConfig = new vault.Configuration({
   basePath: process.env.VAULT_URL,
   headers: {
     'X-Vault-Token': process.env.VAULT_TOKEN as string,
   },
 });
+
+export const supabaseEnv = {
+  url: SUPABASE_URL,
+  publishableKeys: {
+    default: SUPABASE_PUBLISHABLE_KEY,
+  },
+  secretKeys: { default: SUPABASE_SECRET_KEY as string },
+  jwks: new URL(SUPABASE_JWKS_URL as string),
+};

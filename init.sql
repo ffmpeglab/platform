@@ -19,6 +19,7 @@ CREATE INDEX "IDX_1640c5627c5d3141a6eb5caa40" ON "render"  ("user_id") ;
 CREATE INDEX "IDX_58c6b1221195ef87c2c4d62c84" ON "render"  ("date") ;
 CREATE EXTENSION IF NOT EXISTS pgmq CASCADE;
 SELECT pgmq.create('renders');
+SELECT pgmq.create('render');
 SELECT pgmq.create('render_dlq');
 SELECT pgmq.create('file');
 SELECT pgmq.create('logs');
