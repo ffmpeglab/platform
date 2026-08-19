@@ -3,3 +3,8 @@
 node_modules
 dist
 env.sh
+sdk/*
+!sdk/*/docs
+!sdk/*/README.md
+!sdk/*/tsconfig.json
+!sdk/yaml

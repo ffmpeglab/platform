@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { FFMPEGLAB_PLATFORM_PORT } from './config';
-import { apiReference } from '@scalar/nestjs-api-reference'
+import { apiReference } from '@scalar/nestjs-api-reference';
 import session from 'express-session';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -33,13 +33,13 @@ async function bootstrap() {
     };
   }
 
-  // SwaggerModule.setup('api', app, document);
+  SwaggerModule.setup('api', app, document);
   app.use(
-    '/api/docs',
+    '/docs',
     apiReference({
       content: document,
     }),
-  )
+  );
   app.use(
     session({
       secret: process.env.COOKIE_SECRET as string,

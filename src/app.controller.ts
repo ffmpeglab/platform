@@ -61,6 +61,7 @@ export class AppController {
       $ref: getSchemaPath('OrganizationProjectsResponse'),
     },
   })
+  @ApiParam({ name: 'orgId' })
   async projects(
     @Param('orgId') orgId,
     @SupabaseCtx('userClaims') user: SupabaseContext['userClaims'],
@@ -74,11 +75,12 @@ export class AppController {
 
   @Get('platform/tenant/:id')
   @ApiResponse({ type: SupabaseTenantDTO })
+  @ApiParam({ name: 'id' })
   async getTenant(
-    @Param('projectId') projectId,
+    @Param('projectId') id,
     @SupabaseCtx('userClaims') user: SupabaseContext['userClaims'],
   ) {
-    const tenant = await this.appService.getTenant(user!.id, projectId);
+    const tenant = await this.appService.getTenant(user!.id, id);
     if (tenant?.id) {
       const tenantDto = {
         id: tenant.id,
@@ -97,12 +99,14 @@ export class AppController {
   }
 
   @Put('platform/tenant/:id/:status')
+  @ApiParam({ name: 'id' })
+  @ApiParam({ name: 'status' })
   async toggleTenant(
-    @Param('projectId') projectId,
+    @Param('projectId') id,
     @Param('status') status,
     @SupabaseCtx('userClaims') user: SupabaseContext['userClaims'],
   ) {
-    const tenant = await this.appService.getTenant(user!.id, projectId);
+    const tenant = await this.appService.getTenant(user!.id, id);
     if (tenant) {
       tenant.ffmpeglabStatus = status;
       return await this.appService.updateTenant(tenant);
