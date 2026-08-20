@@ -1,12 +1,14 @@
 import * as vault from 'vault-client-typescript';
 
+export const SUPABASE_PLATFORM = 'https://api.supabase.com/';
+
 export const config = {
   clientId: process.env.SUPA_CONNECT_CLIENT_ID,
   clientSecret: process.env.SUPA_CONNECT_CLIENT_SECRET,
   authorizationUri: 'https://api.supabase.com/v1/oauth/authorize',
   accessTokenUri: 'https://api.supabase.com/v1/oauth/token',
   redirectUri: process.env.PLATFORM_HOST + '/platform/oauth2/callback',
-  webAppRedirect: process.env.WEBAPP_HOST + '/pipelines/connect',
+  webAppRedirect: process.env.WEBAPP_HOST + '/pipelines',
 };
 
 export const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -24,7 +26,7 @@ export const POOL_PORT =
 export const FFMPEGLAB_PLATFORM_PORT =
   process.env.FFMPEGLAB_PLATFORM_PORT ?? 7001;
 
-export const profileUri = 'https://api.supabase.com/v1/get/profile';
+export const profileUri = SUPABASE_PLATFORM + 'v1/organizations';
 
 export const vaultClientConfig = new vault.Configuration({
   basePath: process.env.VAULT_URL,
@@ -42,4 +44,4 @@ export const supabaseEnv = {
   jwks: new URL(SUPABASE_JWKS_URL as string),
 };
 
-export default {} 
+export default {};

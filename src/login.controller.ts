@@ -14,6 +14,8 @@ import { withSupabase, SupabaseCtx } from '@supabase/server/adapters/nestjs';
 import { getSupabaseProfile } from './supabase';
 import { ApiResponse } from '@nestjs/swagger';
 import { ConnectRedirectResponseDTO } from './types';
+import type { SupabaseContext } from '@supabase/server';
+import { User } from '@supabase/supabase-js';
 
 const oauth2Client = new ClientOAuth2(config);
 
@@ -39,25 +41,67 @@ export class LoginController {
     @Request() req,
     @Response() response,
     @Session() session: Record<string, any>,
-    @SupabaseCtx() ctx,
+    @SupabaseCtx() ctx: SupabaseContext,
   ): Promise<void | { error: string }> {
-    const oauthSession = await oauth2Client.code.getToken((req as Request).url);
+    try {
+      const oauthSession = await oauth2Client.code.getToken(
+        (req as Request).url,
+      );
 
-    if (!oauthSession.accessToken) {
-      response.redirect(`${config.webAppRedirect}/error`);
-      return;
+      if (!oauthSession.accessToken) throw 'invalid_tokens';
+
+      console.info('platform/oauth2/callback/session.user', {
+        user: session.user,
+      });
+      if (session.user) {
+        await this.appService.saveOauthSession(session.user, oauthSession);
+        return response.redirect(`${config.webAppRedirect}?status=success`);
+      }
+      const profile = await getSupabaseProfile(oauthSession);
+      console.info({ profile });
+      const email = profile.email;
+      if (!email) throw 'no_email';
+      const {
+        data: { users },
+        error: existingUserError,
+      } = await ctx.supabaseAdmin.auth.admin.listUsers();
+
+      // Filter the returned array by email
+      const existingUser = users.find((user) => (user as User).email === email);
+
+      console.info({ existingUser });
+      console.info({ existingUserError });
+      let userId = (existingUser as User)?.id;
+      if (!userId) {
+        const { data: newuser, error: createUserError } =
+          await ctx.supabaseAdmin.auth.admin.createUser({
+            email,
+            user_metadata: { name: profile.user_name },
+          });
+
+        if (createUserError) throw createUserError;
+
+        userId = newuser.user.id;
+      }
+
+      await this.appService.saveOauthSession(userId, oauthSession);
+
+      const { data: linkData, error: createUserLinkError } =
+        await ctx.supabaseAdmin.auth.admin.generateLink({
+          type: 'magiclink',
+          email,
+        });
+
+      console.info({ linkData });
+
+      if (createUserLinkError) throw createUserLinkError;
+
+      const magiclink = linkData.properties.action_link;
+
+      return response.redirect(magiclink);
+    } catch (err) {
+      console.error('oauth2/callback err', err);
+      response.redirect(`${config.webAppRedirect}?status=error`);
     }
-    console.info("platform/oauth2/callback/session.user",{user:session.user})
-    if (session.user) {
-      await this.appService.saveOauthSession(session.user, oauthSession);
-      return response.redirect(`${config.webAppRedirect}/success`);
-    }
-    const profile = await getSupabaseProfile(oauthSession);
-    const newuser = await ctx.supabase.auth.admin.createUser({
-      email: profile.primary_email,
-      user_metadata: { name: profile.username },
-    });
-    await this.appService.saveOauthSession(newuser.id, oauthSession);
-    return response.redirect(`${config.webAppRedirect}/success`);
   }
 }

@@ -1,6 +1,6 @@
 import ClientOAuth2 from 'client-oauth2';
 import { SupabaseManagementAPI } from 'supabase-management-js';
-import { profileUri } from './config';
+import { profileUri, SUPABASE_PLATFORM } from './config';
 import { SupabaseProfile } from './types';
 
 export const getProject = async (
@@ -8,9 +8,16 @@ export const getProject = async (
   projectId: string,
 ) => (await supaManagementClient.getProject(projectId)).data;
 
-export const getSupabaseProfile = async (session: ClientOAuth2.Token) =>
-  (await (
+export const getSupabaseProfile = async (session: ClientOAuth2.Token) => {
+  const [org] = await (
     await fetch(profileUri, {
-      headers: { authorization: 'Beaerer ' + session.accessToken },
+      headers: { Authorization: 'Bearer ' + session.accessToken },
     })
-  ).json()) as SupabaseProfile;
+  ).json();
+  const [member] = await (
+    await fetch(`${SUPABASE_PLATFORM}v1/organizations/${org.id}/members`, {
+      headers: { Authorization: 'Bearer ' + session.accessToken },
+    })
+  ).json();
+  return member as { email: string; user_name: string };
+};

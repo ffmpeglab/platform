@@ -47,6 +47,7 @@ async function bootstrap() {
       saveUninitialized: false,
     }),
   );
+  app.enableCors();
   await app.listen(FFMPEGLAB_PLATFORM_PORT);
 }
 bootstrap();
