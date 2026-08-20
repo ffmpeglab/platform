@@ -53,25 +53,26 @@ export class LoginController {
       console.info('platform/oauth2/callback/session.user', {
         user: session.user,
       });
+
       if (session.user) {
         await this.appService.saveOauthSession(session.user, oauthSession);
         return response.redirect(`${config.webAppRedirect}?status=success`);
       }
+
       const profile = await getSupabaseProfile(oauthSession);
-      console.info({ profile });
+
       const email = profile.email;
+
       if (!email) throw 'no_email';
       const {
         data: { users },
-        error: existingUserError,
       } = await ctx.supabaseAdmin.auth.admin.listUsers();
 
       // Filter the returned array by email
       const existingUser = users.find((user) => (user as User).email === email);
 
-      console.info({ existingUser });
-      console.info({ existingUserError });
-      let userId = (existingUser as User)?.id;
+      let userId = existingUser?.id;
+
       if (!userId) {
         const { data: newuser, error: createUserError } =
           await ctx.supabaseAdmin.auth.admin.createUser({
@@ -91,8 +92,6 @@ export class LoginController {
           type: 'magiclink',
           email,
         });
-
-      console.info({ linkData });
 
       if (createUserLinkError) throw createUserLinkError;
 
