@@ -55,7 +55,7 @@ export class LoginController {
         (req as Request).url,
       );
       console.info(oauthSession)
-      
+
       if (!oauthSession.accessToken) throw 'invalid_tokens';
 
       const profile = await getSupabaseProfile(oauthSession);
@@ -103,6 +103,9 @@ export class LoginController {
         await ctx.supabaseAdmin.auth.admin.generateLink({
           type: 'magiclink',
           email,
+          options:{
+            redirectTo:config.webAppRedirect
+          }
         });
 
       if (createUserLinkError) throw createUserLinkError;
