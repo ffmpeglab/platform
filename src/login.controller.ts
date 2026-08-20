@@ -36,6 +36,13 @@ export class LoginController {
     return { redirectUri };
   }
 
+  @Get('platform/login/redirect')
+  @ApiResponse({ type: ConnectRedirectResponseDTO })
+  platformLoginRedirect(@Response() response): void {
+    const redirectUri = oauth2Client.code.getUri();
+    response.redirect(redirectUri);
+  }
+
   @Get('platform/oauth2/callback')
   async platformLoginCallback(
     @Request() req,
