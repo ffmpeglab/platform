@@ -54,11 +54,17 @@ export class LoginController {
       const oauthSession = await oauth2Client.code.getToken(
         (req as Request).url,
       );
-
+      console.info(oauthSession)
+      
       if (!oauthSession.accessToken) throw 'invalid_tokens';
+
+      const profile = await getSupabaseProfile(oauthSession);
+      
+      if(!profile?.email) throw 'invalid_tokens_for_profile'
 
       console.info('platform/oauth2/callback/session.user', {
         user: session.user,
+        profile
       });
 
       if (session.user) {
@@ -66,7 +72,6 @@ export class LoginController {
         return response.redirect(`${config.webAppRedirect}`);
       }
 
-      const profile = await getSupabaseProfile(oauthSession);
 
       const email = profile.email;
 
