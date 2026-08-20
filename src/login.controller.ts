@@ -54,7 +54,7 @@ export class LoginController {
       const oauthSession = await oauth2Client.code.getToken(
         (req as Request).url,
       );
-      console.info(oauthSession)
+      // console.info(oauthSession)
 
       if (!oauthSession.accessToken) throw 'invalid_tokens';
 
