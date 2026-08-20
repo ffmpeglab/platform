@@ -63,7 +63,7 @@ export class LoginController {
 
       if (session.user) {
         await this.appService.saveOauthSession(session.user, oauthSession);
-        return response.redirect(`${config.webAppRedirect}?status=success`);
+        return response.redirect(`${config.webAppRedirect}`);
       }
 
       const profile = await getSupabaseProfile(oauthSession);

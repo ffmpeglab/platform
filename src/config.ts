@@ -8,7 +8,7 @@ export const config = {
   authorizationUri: 'https://api.supabase.com/v1/oauth/authorize',
   accessTokenUri: 'https://api.supabase.com/v1/oauth/token',
   redirectUri: process.env.PLATFORM_HOST + '/platform/oauth2/callback',
-  webAppRedirect: process.env.WEBAPP_HOST + '/pipelines',
+  webAppRedirect: process.env.WEBAPP_HOST + '/editor?showEditorTemplates=true',
 };
 
 export const SUPABASE_URL = process.env.SUPABASE_URL;
