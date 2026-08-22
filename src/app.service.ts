@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { config, POOL_PORT, POOL_POSTFIX, vaultClientConfig } from './config';
 import ClientOAuth2 from 'client-oauth2';
 import * as vault from 'vault-client-typescript';
-import { SupabaseSession, SupabaseTenant } from './types';
+import { applyMigrationDTO, SupabaseSession, SupabaseTenant } from './types';
 import { SupabaseManagementAPI } from 'supabase-management-js';
 import {
   createPostgresCredentials,
@@ -69,7 +69,7 @@ export class AppService {
         await secretsClient.kvV2Read(`tenants/${userId}/${projectId}`, 'secret')
       ).data as SupabaseTenant;
     } catch (error) {
-      // Tenant not found – continue
+      console.error('tenant not found', error);
     }
   }
 
@@ -84,17 +84,30 @@ export class AppService {
     return this.getTenant(tenant.user, tenant.id);
   }
 
+  async applyMigration(userId: string, body: applyMigrationDTO) {
+    const { projectId, sql, name } = body;
+    const supaManagementClient = await this.createSupaClient(userId);
+    return await supaManagementClient.applyAMigration(projectId, {
+      query: sql,
+      name,
+    });
+  }
+
   async createTenant(userId: string, projectId: string) {
     const supaManagementClient = await this.createSupaClient(userId);
     // Generate database credentials
     const dbCreds = createPostgresCredentials();
     const createUserSQL = createPostgresqlQueryForCredentials(dbCreds);
 
-    // Execute SQL on the Supabase project to create database tables
-    await supaManagementClient.applyAMigration(projectId, {
-      query: initSql,
-      name: 'ffmpeglab-init',
-    });
+    try {
+      // Execute SQL on the Supabase project to create database tables
+      await supaManagementClient.applyAMigration(projectId, {
+        query: initSql,
+        name: 'ffmpeglab-init',
+      });
+    } catch (err) {
+      console.error('initSql err', err);
+    }
 
     // Execute SQL on the Supabase project to create user and give permissions for database tables
     await supaManagementClient.applyAMigration(projectId, {

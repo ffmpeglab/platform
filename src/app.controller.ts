@@ -1,7 +1,9 @@
 import {
+  Body,
   Controller,
   Get,
   Param,
+  Post,
   Put,
   Session,
   UseGuards,
@@ -13,17 +15,21 @@ import {
   SupabaseSession,
   SupabaseTenantDTO,
   ConnectRedirectResponseDTO,
+  applyMigrationDTO,
+  storeMnemonicDTO,
 } from './types';
 import { withSupabase, SupabaseCtx } from '@supabase/server/adapters/nestjs';
 import type { SupabaseContext } from '@supabase/server';
 import {
   ApiBearerAuth,
   ApiParam,
+  ApiProperty,
   ApiResponse,
   getSchemaPath,
 } from '@nestjs/swagger';
 
 const oauth2Client = new ClientOAuth2(config);
+
 @Controller()
 @UseGuards(
   withSupabase({
@@ -77,10 +83,12 @@ export class AppController {
   @ApiResponse({ type: SupabaseTenantDTO })
   @ApiParam({ name: 'id' })
   async getTenant(
-    @Param('projectId') id,
+    @Param('id') id,
     @SupabaseCtx('userClaims') user: SupabaseContext['userClaims'],
   ) {
+    console.info({ user });
     const tenant = await this.appService.getTenant(user!.id, id);
+    console.info({ tenant });
     if (tenant?.id) {
       const tenantDto = {
         id: tenant.id,
@@ -113,14 +121,21 @@ export class AppController {
     }
   }
 
+  @Post('platform/migration')
+  async applyMigration(
+    @Body() body: applyMigrationDTO,
+    @SupabaseCtx('userClaims') user: SupabaseContext['userClaims'],
+  ) {
+    return await this.appService.applyMigration(user!.id, body);
+  }
+
   @Get('platform/organizations')
   @ApiResponse({
     status: 200,
     description: 'Successfully fetched organizations.',
     schema: {
-      type: 'array', // 1. Define the top-level type as an array
+      type: 'array',
       items: {
-        // 2. Reference the individual object schema inside the array
         $ref: getSchemaPath('OrganizationResponseV1'),
       },
     },

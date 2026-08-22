@@ -16,7 +16,18 @@ export class SupabaseSession {
   @ApiProperty()
   access_token: string;
 }
-
+export class applyMigrationDTO {
+  @ApiProperty()
+  projectId: string;
+  @ApiProperty()
+  sql: string;
+  @ApiProperty()
+  name: string;
+}
+export class storeMnemonicDTO {
+  @ApiProperty()
+  mnemonic: string;
+}
 export interface SupabaseTenant extends Awaited<ReturnType<typeof getProject>> {
   id: string;
   created: number;
