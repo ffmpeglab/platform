@@ -130,6 +130,14 @@ export class AppService {
         name: 'FFMpegLab',
       })
     )?.data?.api_key as string;
+
+    const SUPABASE_ANON_KEY = (
+      await supaManagementClient.createProjectApiKey(projectId, {
+        type: 'publishable',
+        name: 'FFMpegLab Public',
+      })
+    )?.data?.api_key as string;
+
     const TENANT_SECRET_KEY = generateSecurePassword();
     const project = await getProject(supaManagementClient, projectId);
     const projectHost = `https://${projectId}.supabase.co`;
@@ -175,7 +183,7 @@ export class AppService {
       TENANT_SERVICE_KEY,
       TENANT_WORKER_LOGIN,
       TENANT_USER_ID: userId,
-      SUPABASE_ANON_KEY: '',
+      SUPABASE_ANON_KEY,
       PLATFORM_HOST,
       S3_REGION: project.region,
       S3_ENDPOINT: `https://${projectId}.storage.supabase.co/storage/v1/s3`,

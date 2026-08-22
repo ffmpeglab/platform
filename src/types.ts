@@ -85,6 +85,13 @@ export class SupabaseTenantDTO implements Omit<
   | 'organization_slug'
   | '(Missing)'
   | 'TENANT_SERVICE_KEY'
+  | 'TENANT_SECRET_KEY'
+  | 'TENANT_USER_ID'
+  | 'TENANT_WORKER_LOGIN'
+  | 'SUPABASE_ANON_KEY'
+  | 'PLATFORM_HOST'
+  | 'S3_REGION'
+  | 'S3_ENDPOINT'
 > {
   @ApiProperty()
   id: string;
