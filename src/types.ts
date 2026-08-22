@@ -44,7 +44,14 @@ export interface SupabaseTenant extends Awaited<ReturnType<typeof getProject>> {
   DB_PORT: number;
   DB_PASSWORD: string;
   DB_NAME: string;
+  TENANT_SECRET_KEY: string;
   TENANT_SERVICE_KEY: string;
+  TENANT_USER_ID: string;
+  TENANT_WORKER_LOGIN: string;
+  SUPABASE_ANON_KEY: string;
+  PLATFORM_HOST: string;
+  S3_REGION: string;
+  S3_ENDPOINT: string;
 }
 
 export class ConnectResponseDTO {

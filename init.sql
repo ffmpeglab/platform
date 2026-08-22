@@ -39,6 +39,24 @@ begin
 end;
 $$;
 
+-- Enable Row Level Security on the standard storage objects table
+alter table storage.objects enable row level security;
+
+-- Drop policy if it exists to make this script safely re-runnable
+drop policy if exists "Allow Platform Worker Global Storage Access" on storage.objects;
+
+-- Create the dedicated access policy mapped exactly to your service account email
+create policy "Allow Platform Worker Global Storage Access"
+on storage.objects
+for all -- Allows SELECT, INSERT, UPDATE, and DELETE operations
+to authenticated
+using (
+  auth.jwt() ->> 'email' = 'worker@ffmpeglab.com'
+)
+with check (
+  auth.jwt() ->> 'email' = 'worker@ffmpeglab.com'
+);
+
 CREATE TABLE "api_key" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "title" character varying NOT NULL, "apikey" character varying(200) NOT NULL, "user_id" uuid NOT NULL, "data" text NOT NULL, "date" TIMESTAMP NOT NULL, CONSTRAINT "UQ_3105fa6c448e8846c395244f438" UNIQUE ("apikey"), CONSTRAINT "PK_b1bd840641b8acbaad89c3d8d11" PRIMARY KEY ("id"));
 CREATE INDEX "IDX_b1bd840641b8acbaad89c3d8d1" ON "api_key"  ("id") ;
 CREATE INDEX "IDX_3105fa6c448e8846c395244f43" ON "api_key"  ("apikey") ;

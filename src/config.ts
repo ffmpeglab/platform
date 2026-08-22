@@ -2,16 +2,18 @@ import * as vault from 'vault-client-typescript';
 
 export const SUPABASE_PLATFORM = 'https://api.supabase.com/';
 
+export const PLATFORM_HOST = process.env.PLATFORM_HOST as string;
+
 export const config = {
   clientId: process.env.SUPA_CONNECT_CLIENT_ID,
   clientSecret: process.env.SUPA_CONNECT_CLIENT_SECRET,
   authorizationUri: 'https://api.supabase.com/v1/oauth/authorize',
   accessTokenUri: 'https://api.supabase.com/v1/oauth/token',
-  redirectUri: process.env.PLATFORM_HOST + '/platform/oauth2/callback',
+  redirectUri: PLATFORM_HOST + '/platform/oauth2/callback',
   webAppRedirect:
     process.env.WEBAPP_HOST + '/pipelines?showPipelineTemplates=true',
 };
-
+export const TENANT_WORKER_LOGIN = 'worker@ffmpeglab.com';
 export const SUPABASE_URL = process.env.SUPABASE_URL;
 export const SUPABASE_PUBLISHABLE_KEY = process.env
   .SUPABASE_PUBLISHABLE_KEY as string;

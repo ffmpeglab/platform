@@ -1,6 +1,13 @@
 import { Injectable } from '@nestjs/common';
 
-import { config, POOL_PORT, POOL_POSTFIX, vaultClientConfig } from './config';
+import {
+  config,
+  POOL_PORT,
+  POOL_POSTFIX,
+  vaultClientConfig,
+  PLATFORM_HOST,
+  TENANT_WORKER_LOGIN,
+} from './config';
 import ClientOAuth2 from 'client-oauth2';
 import * as vault from 'vault-client-typescript';
 import { applyMigrationDTO, SupabaseSession, SupabaseTenant } from './types';
@@ -12,6 +19,7 @@ import {
   initSql,
 } from './utils';
 import { getProject } from './supabase';
+import { createClient } from '@supabase/supabase-js';
 
 const secretsClient = new vault.SecretsApi(vaultClientConfig);
 const oauth2Client = new ClientOAuth2(config);
@@ -100,8 +108,6 @@ export class AppService {
     // Generate database credentials
     const dbCreds = createPostgresCredentials();
     const createUserSQL = createPostgresqlQueryForCredentials(dbCreds);
-    let TENANT_SERVICE_KEY = await this.getOrCreateTenantServiceKey(userId);
-
     try {
       // Execute SQL on the Supabase project to create database tables
       await supaManagementClient.applyAMigration(projectId, {
@@ -118,8 +124,28 @@ export class AppService {
       name: 'ffmpeglab-permissions',
     });
 
-    // Fetch full project details
+    const TENANT_SERVICE_KEY = (
+      await supaManagementClient.createProjectApiKey(projectId, {
+        type: 'secret',
+        name: 'FFMpegLab',
+      })
+    )?.data?.api_key as string;
+    const TENANT_SECRET_KEY = generateSecurePassword();
     const project = await getProject(supaManagementClient, projectId);
+    const projectHost = `https://${projectId}.supabase.co`;
+    const tenantAdminClient = createClient(projectHost, TENANT_SERVICE_KEY, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    });
+
+    const newuser = await tenantAdminClient.auth.admin.createUser({
+      email: TENANT_WORKER_LOGIN,
+      password: TENANT_SECRET_KEY,
+      email_confirm: true, // ⚡ Bypasses email confirmation loops
+      user_metadata: { role: 'platform-s3-worker' },
+    });
 
     // Build tenant record
     const poolPort = POOL_PORT;
@@ -145,7 +171,14 @@ export class AppService {
       DB_PORT: poolPort as number,
       DB_PASSWORD: dbCreds.password,
       DB_NAME: dbCreds.database,
+      TENANT_SECRET_KEY,
       TENANT_SERVICE_KEY,
+      TENANT_WORKER_LOGIN,
+      TENANT_USER_ID: userId,
+      SUPABASE_ANON_KEY: '',
+      PLATFORM_HOST,
+      S3_REGION: project.region,
+      S3_ENDPOINT: `https://${projectId}.storage.supabase.co/storage/v1/s3`,
     };
 
     // Persist tenant
