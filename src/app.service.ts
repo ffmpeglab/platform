@@ -123,41 +123,43 @@ export class AppService {
       query: createUserSQL,
       name: 'ffmpeglab-permissions',
     });
-
     const TENANT_SERVICE_KEY = (
       await supaManagementClient.createProjectApiKey(projectId, {
         type: 'secret',
-        name: 'FFMpegLab',
+        name: 'ffmpeglab_private_' + new Date().valueOf(),
       })
     )?.data?.api_key as string;
 
     const SUPABASE_ANON_KEY = (
       await supaManagementClient.createProjectApiKey(projectId, {
         type: 'publishable',
-        name: 'FFMpegLab Public',
+        name: 'ffmpeglab_public_' + new Date().valueOf(),
       })
     )?.data?.api_key as string;
 
     const TENANT_SECRET_KEY = generateSecurePassword();
     const project = await getProject(supaManagementClient, projectId);
-    const projectHost = `https://${projectId}.supabase.co`;
-    const tenantAdminClient = createClient(projectHost, TENANT_SERVICE_KEY, {
+    const SUPABASE_HOST = `https://${projectId}.supabase.co`;
+    const tenantAdminClient = createClient(SUPABASE_HOST, TENANT_SERVICE_KEY, {
       auth: {
         autoRefreshToken: false,
         persistSession: false,
       },
     });
 
-    const newuser = await tenantAdminClient.auth.admin.createUser({
+    await tenantAdminClient.auth.admin.createUser({
       email: TENANT_WORKER_LOGIN,
       password: TENANT_SECRET_KEY,
       email_confirm: true, // ⚡ Bypasses email confirmation loops
       user_metadata: { role: 'platform-s3-worker' },
     });
 
+    const poolerConfig = (await supaManagementClient.getPoolerConfig(projectId))
+      .data?.[0];
+
     // Build tenant record
-    const poolPort = POOL_PORT;
-    const poolHost = `aws-1-${project.region}${POOL_POSTFIX}`;
+    const poolPort = poolerConfig.db_port;
+    const poolHost = poolerConfig.db_host;
     const now = Date.now();
     const dbUserName = dbCreds.user + '.' + projectId;
     const newTenant: SupabaseTenant = {
@@ -183,8 +185,10 @@ export class AppService {
       TENANT_SERVICE_KEY,
       TENANT_WORKER_LOGIN,
       TENANT_USER_ID: userId,
+      IS_SUPABASE_PLATFORM: true,
       SUPABASE_ANON_KEY,
       PLATFORM_HOST,
+      SUPABASE_HOST,
       S3_REGION: project.region,
       S3_ENDPOINT: `https://${projectId}.storage.supabase.co/storage/v1/s3`,
     };
