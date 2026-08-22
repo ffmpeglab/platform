@@ -16,14 +16,13 @@ import {
   SupabaseTenantDTO,
   ConnectRedirectResponseDTO,
   applyMigrationDTO,
-  storeMnemonicDTO,
 } from './types';
+
 import { withSupabase, SupabaseCtx } from '@supabase/server/adapters/nestjs';
 import type { SupabaseContext } from '@supabase/server';
 import {
   ApiBearerAuth,
   ApiParam,
-  ApiProperty,
   ApiResponse,
   getSchemaPath,
 } from '@nestjs/swagger';
@@ -86,9 +85,7 @@ export class AppController {
     @Param('id') id,
     @SupabaseCtx('userClaims') user: SupabaseContext['userClaims'],
   ) {
-    console.info({ user });
     const tenant = await this.appService.getTenant(user!.id, id);
-    console.info({ tenant });
     if (tenant?.id) {
       const tenantDto = {
         id: tenant.id,
@@ -156,7 +153,6 @@ export class AppController {
     @SupabaseCtx('userClaims') user: SupabaseContext['userClaims'],
   ): { redirectUri: string } {
     session.user = user?.id;
-    console.info('platform/connect/session.user', { user: session.user });
     const redirectUri = oauth2Client.code.getUri();
     return { redirectUri };
   }

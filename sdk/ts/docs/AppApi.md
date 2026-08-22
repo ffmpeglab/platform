@@ -4,6 +4,7 @@ All URIs are relative to *http://localhost*
 
 | Method | HTTP request | Description |
 |------------- | ------------- | -------------|
+| [**appControllerApplyMigration**](AppApi.md#appcontrollerapplymigration) | **POST** /platform/migration |  |
 | [**appControllerConnectProject**](AppApi.md#appcontrollerconnectproject) | **GET** /platform/connect/project/{projectId} |  |
 | [**appControllerGetTenant**](AppApi.md#appcontrollergettenant) | **GET** /platform/tenant/{id} |  |
 | [**appControllerMe**](AppApi.md#appcontrollerme) | **GET** /platform/me |  |
@@ -12,6 +13,71 @@ All URIs are relative to *http://localhost*
 | [**appControllerProjects**](AppApi.md#appcontrollerprojects) | **GET** /platform/projects/{orgId} |  |
 | [**appControllerToggleTenant**](AppApi.md#appcontrollertoggletenant) | **PUT** /platform/tenant/{id}/{status} |  |
 
+
+
+## appControllerApplyMigration
+
+> appControllerApplyMigration(applyMigrationDTO)
+
+
+
+### Example
+
+```ts
+import {
+  Configuration,
+  AppApi,
+} from 'ffmpeglab-platform-sdk';
+import type { AppControllerApplyMigrationRequest } from 'ffmpeglab-platform-sdk';
+
+async function example() {
+  console.log("🚀 Testing ffmpeglab-platform-sdk SDK...");
+  const api = new AppApi();
+
+  const body = {
+    // ApplyMigrationDTO
+    applyMigrationDTO: ...,
+  } satisfies AppControllerApplyMigrationRequest;
+
+  try {
+    const data = await api.appControllerApplyMigration(body);
+    console.log(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// Run the test
+example().catch(console.error);
+```
+
+### Parameters
+
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **applyMigrationDTO** | [ApplyMigrationDTO](ApplyMigrationDTO.md) |  | |
+
+### Return type
+
+`void` (Empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: `application/json`
+- **Accept**: Not defined
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **201** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 
 
 ## appControllerConnectProject

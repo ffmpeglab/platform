@@ -35,3 +35,11 @@ export function generateSecurePassword() {
   const array = new Uint32Array(10);
   return crypto.getRandomValues(array).join('').toString();
 }
+
+export function extractTokenFromHeader(request: Request): string | undefined {
+  const auth =
+    (request.headers as any).authorization ||
+    request.headers.get('authorization');
+  const token = auth.replace('Bearer ', '');
+  return token;
+}

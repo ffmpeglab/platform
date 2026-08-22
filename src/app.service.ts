@@ -8,6 +8,7 @@ import { SupabaseManagementAPI } from 'supabase-management-js';
 import {
   createPostgresCredentials,
   createPostgresqlQueryForCredentials,
+  generateSecurePassword,
   initSql,
 } from './utils';
 import { getProject } from './supabase';
@@ -18,8 +19,9 @@ const oauth2Client = new ClientOAuth2(config);
 @Injectable()
 export class AppService {
   async getSessionForUser(userId: string) {
-    let session = (await secretsClient.kvV2Read('users/' + userId, 'secret'))
-      .data as SupabaseSession;
+    let session = (
+      await secretsClient.kvV2Read(`users/${userId}/session`, 'secret')
+    ).data as SupabaseSession;
     const sessionExpiresDate = session.created + session.expires;
     const isSessionValid = new Date().valueOf() < sessionExpiresDate;
     if (!isSessionValid) {
@@ -48,7 +50,7 @@ export class AppService {
       access_token: oauthSession.accessToken,
     };
 
-    await secretsClient.kvV2Write('users/' + userId, 'secret', {
+    await secretsClient.kvV2Write(`users/${userId}/session`, 'secret', {
       data: session,
     });
     return session;
@@ -98,6 +100,7 @@ export class AppService {
     // Generate database credentials
     const dbCreds = createPostgresCredentials();
     const createUserSQL = createPostgresqlQueryForCredentials(dbCreds);
+    let TENANT_SERVICE_KEY = await this.getOrCreateTenantServiceKey(userId);
 
     try {
       // Execute SQL on the Supabase project to create database tables
@@ -142,6 +145,7 @@ export class AppService {
       DB_PORT: poolPort as number,
       DB_PASSWORD: dbCreds.password,
       DB_NAME: dbCreds.database,
+      TENANT_SERVICE_KEY,
     };
 
     // Persist tenant
@@ -149,5 +153,50 @@ export class AppService {
       data: newTenant,
     });
     return newTenant;
+  }
+
+  async findUserByTenantSecret(key: string): Promise<string | undefined> {
+    const users = (
+      await secretsClient.kvV2List(
+        'users',
+        'secret',
+        vault.SecretsApiKvV2ListListEnum.TRUE,
+      )
+    ).keys;
+
+    if (!users) throw 'no_users';
+
+    const results = await Promise.all(
+      users.map(async (userId: string) => {
+        const vaultRes = await secretsClient.kvV2Read(
+          `users/${userId}/key`,
+          'secret',
+        );
+        const secretKey = (vaultRes.data as { secretKey: string }).secretKey;
+        if (secretKey === key) return userId;
+      }),
+    );
+
+    const [userId] = results.filter((i) => i);
+
+    return userId;
+  }
+
+  async getOrCreateTenantServiceKey(userId: string): Promise<string> {
+    try {
+      const tenantServiceKey = (
+        await secretsClient.kvV2Read(`users/${userId}/key`, 'secret')
+      ).data as { secretKey: string };
+      return tenantServiceKey.secretKey;
+    } catch (err) {
+      console.info('error on lookup for tenant service key', err);
+    }
+    const secretKey = generateSecurePassword();
+
+    await secretsClient.kvV2Write(`users/${userId}/key`, 'secret', {
+      data: { secretKey },
+    });
+
+    return secretKey;
   }
 }

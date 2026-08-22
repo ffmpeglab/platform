@@ -16,6 +16,7 @@ export class SupabaseSession {
   @ApiProperty()
   access_token: string;
 }
+
 export class applyMigrationDTO {
   @ApiProperty()
   projectId: string;
@@ -24,10 +25,7 @@ export class applyMigrationDTO {
   @ApiProperty()
   name: string;
 }
-export class storeMnemonicDTO {
-  @ApiProperty()
-  mnemonic: string;
-}
+
 export interface SupabaseTenant extends Awaited<ReturnType<typeof getProject>> {
   id: string;
   created: number;
@@ -46,6 +44,7 @@ export interface SupabaseTenant extends Awaited<ReturnType<typeof getProject>> {
   DB_PORT: number;
   DB_PASSWORD: string;
   DB_NAME: string;
+  TENANT_SERVICE_KEY: string;
 }
 
 export class ConnectResponseDTO {
