@@ -20,12 +20,6 @@ export const SUPABASE_PUBLISHABLE_KEY = process.env
 export const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY as string;
 export const SUPABASE_JWKS_URL = process.env.SUPABASE_JWKS_URL as string;
 
-export const POOL_POSTFIX =
-  process.env.SUPABASE_CLOUD_POSTGRES_POOLER_URL || '.pooler.supabase.com';
-
-export const POOL_PORT =
-  process.env.SUPABASE_CLOUD_POSTGRES_POOLER_PORT || 6543;
-
 export const FFMPEGLAB_PLATFORM_PORT =
   process.env.FFMPEGLAB_PLATFORM_PORT ?? 7001;
 

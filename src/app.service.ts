@@ -2,8 +2,6 @@ import { Injectable } from '@nestjs/common';
 
 import {
   config,
-  POOL_PORT,
-  POOL_POSTFIX,
   vaultClientConfig,
   PLATFORM_HOST,
   TENANT_WORKER_LOGIN,
@@ -19,7 +17,6 @@ import {
   initSql,
 } from './utils';
 import { getProject } from './supabase';
-import { createClient } from '@supabase/supabase-js';
 
 const secretsClient = new vault.SecretsApi(vaultClientConfig);
 const oauth2Client = new ClientOAuth2(config);
@@ -108,15 +105,6 @@ export class AppService {
     // Generate database credentials
     const dbCreds = createPostgresCredentials();
     const createUserSQL = createPostgresqlQueryForCredentials(dbCreds);
-    // const serviceKeyName = 'ffmpeglab_private_' + new Date().valueOf()
-    // // (
-    //   const {data:serviceKey} = await supaManagementClient.createProjectApiKey(projectId, {
-    //     type: 'secret',
-    //     name: serviceKeyName,
-    //   })
-    // // )
-    // const {data:{api_key:TENANT_SERVICE_KEY}} = await supaManagementClient.getProjectApiKey(projectId, serviceKey.id as string, {reveal:true})
-
     const { data: supaKeys } = await supaManagementClient.getProjectApiKeys(
       projectId,
       { reveal: true },
