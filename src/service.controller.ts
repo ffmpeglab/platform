@@ -1,6 +1,7 @@
 import {
   Controller,
   Get,
+  Param,
   Request,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -14,18 +15,24 @@ import { extractTokenFromHeader } from './utils';
 export class ServiceController {
   constructor(private readonly appService: AppService) {}
 
-  @Get('platform/session/supabase')
+  @Get('platform/session/supabase/:userId')
   @ApiParam({ name: 'userId' })
-  async getSupabaseSession(@Request() req: Request) {
+  async getSupabaseSession(
+    @Param('userId') userId: string,
+    @Request() req: Request,
+  ) {
     const token = extractTokenFromHeader(req);
 
     if (!token) {
       throw new UnauthorizedException();
     }
 
-    const userId = await this.appService.findUserByTenantSecret(token);
+    const isValid = await this.appService.validateUserTenantServiceKey(
+      token,
+      userId,
+    );
 
-    if (!userId) {
+    if (!isValid) {
       throw new UnauthorizedException();
     }
 

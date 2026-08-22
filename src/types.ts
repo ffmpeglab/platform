@@ -77,6 +77,7 @@ export class SupabaseTenantDTO implements Omit<
   | 'organization_id'
   | 'organization_slug'
   | '(Missing)'
+  | 'TENANT_SERVICE_KEY'
 > {
   @ApiProperty()
   id: string;

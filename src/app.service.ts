@@ -155,7 +155,10 @@ export class AppService {
     return newTenant;
   }
 
-  async findUserByTenantSecret(key: string): Promise<string | undefined> {
+  async validateUserTenantServiceKey(
+    key: string,
+    userId: string,
+  ): Promise<boolean> {
     const users = (
       await secretsClient.kvV2List(
         'users',
@@ -166,20 +169,16 @@ export class AppService {
 
     if (!users) throw 'no_users';
 
-    const results = await Promise.all(
-      users.map(async (userId: string) => {
-        const vaultRes = await secretsClient.kvV2Read(
-          `users/${userId}/key`,
-          'secret',
-        );
-        const secretKey = (vaultRes.data as { secretKey: string }).secretKey;
-        if (secretKey === key) return userId;
-      }),
+    const vaultRes = await secretsClient.kvV2Read(
+      `users/${userId}/key`,
+      'secret',
     );
 
-    const [userId] = results.filter((i) => i);
+    const secretKey = (vaultRes.data as { secretKey: string }).secretKey;
 
-    return userId;
+    if (secretKey === key) return true;
+
+    return false;
   }
 
   async getOrCreateTenantServiceKey(userId: string): Promise<string> {
