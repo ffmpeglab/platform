@@ -54,6 +54,8 @@ export interface SupabaseTenant extends Awaited<ReturnType<typeof getProject>> {
   SUPABASE_HOST: string;
   S3_ENDPOINT: string;
   IS_SUPABASE_PLATFORM: boolean;
+  PIPELINES_API_ENABLED: boolean;
+  SUPABASE_PROJECT_ID: string;
 }
 
 export class ConnectResponseDTO {
@@ -96,6 +98,8 @@ export class SupabaseTenantDTO implements Omit<
   | 'S3_ENDPOINT'
   | 'IS_SUPABASE_PLATFORM'
   | 'SUPABASE_HOST'
+  | 'SUPABASE_PROJECT_ID'
+  | 'PIPELINES_API_ENABLED'
 > {
   @ApiProperty()
   id: string;

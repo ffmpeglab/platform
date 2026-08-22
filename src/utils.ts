@@ -27,6 +27,10 @@ export function createPostgresqlQueryForCredentials(creds: {
     GRANT ALL on table pgmq.q_render to ${creds.user};
     GRANT ALL on table pgmq.q_file to ${creds.user};
     GRANT ALL on table pgmq.q_logs to ${creds.user};
+    GRANT ALL on table pgmq.a_renders to ${creds.user};
+    GRANT ALL on table pgmq.a_render to ${creds.user};
+    GRANT ALL on table pgmq.a_file to ${creds.user};
+    GRANT ALL on table pgmq.a_logs to ${creds.user};
   `;
 }
 

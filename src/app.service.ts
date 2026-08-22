@@ -64,11 +64,11 @@ export class AppService {
     return session;
   }
 
-  async createSupaClient(userId: string) {
+  async createSupaClient(userId: string): Promise<SupabaseManagementAPI> {
     const session = await this.getSessionForUser(userId);
-
+    const accessToken = session.accessToken ?? session.access_token;
     const supaManagementClient = new SupabaseManagementAPI({
-      accessToken: session.accessToken ?? session.access_token,
+      accessToken,
     });
     return supaManagementClient;
   }
@@ -108,10 +108,35 @@ export class AppService {
     // Generate database credentials
     const dbCreds = createPostgresCredentials();
     const createUserSQL = createPostgresqlQueryForCredentials(dbCreds);
+    // const serviceKeyName = 'ffmpeglab_private_' + new Date().valueOf()
+    // // (
+    //   const {data:serviceKey} = await supaManagementClient.createProjectApiKey(projectId, {
+    //     type: 'secret',
+    //     name: serviceKeyName,
+    //   })
+    // // )
+    // const {data:{api_key:TENANT_SERVICE_KEY}} = await supaManagementClient.getProjectApiKey(projectId, serviceKey.id as string, {reveal:true})
+
+    const { data: supaKeys } = await supaManagementClient.getProjectApiKeys(
+      projectId,
+      { reveal: true },
+    );
+
+    const SUPABASE_ANON_KEY = supaKeys.find((k) => k.name === 'anon')
+      ?.api_key as string;
+
+    const TENANT_SECRET_KEY = generateSecurePassword();
+    const project = await getProject(supaManagementClient, projectId);
+    const SUPABASE_HOST = `https://${projectId}.supabase.co`;
     try {
       // Execute SQL on the Supabase project to create database tables
+      const initSQlWithNewPassword = initSql.replace(
+        'user_password',
+        TENANT_SECRET_KEY,
+      );
+      // console.info(initSQlWithNewPassword)
       await supaManagementClient.applyAMigration(projectId, {
-        query: initSql,
+        query: initSQlWithNewPassword,
         name: 'ffmpeglab-init',
       });
     } catch (err) {
@@ -122,36 +147,6 @@ export class AppService {
     await supaManagementClient.applyAMigration(projectId, {
       query: createUserSQL,
       name: 'ffmpeglab-permissions',
-    });
-    const TENANT_SERVICE_KEY = (
-      await supaManagementClient.createProjectApiKey(projectId, {
-        type: 'secret',
-        name: 'ffmpeglab_private_' + new Date().valueOf(),
-      })
-    )?.data?.api_key as string;
-
-    const SUPABASE_ANON_KEY = (
-      await supaManagementClient.createProjectApiKey(projectId, {
-        type: 'publishable',
-        name: 'ffmpeglab_public_' + new Date().valueOf(),
-      })
-    )?.data?.api_key as string;
-
-    const TENANT_SECRET_KEY = generateSecurePassword();
-    const project = await getProject(supaManagementClient, projectId);
-    const SUPABASE_HOST = `https://${projectId}.supabase.co`;
-    const tenantAdminClient = createClient(SUPABASE_HOST, TENANT_SERVICE_KEY, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    });
-
-    await tenantAdminClient.auth.admin.createUser({
-      email: TENANT_WORKER_LOGIN,
-      password: TENANT_SECRET_KEY,
-      email_confirm: true, // ⚡ Bypasses email confirmation loops
-      user_metadata: { role: 'platform-s3-worker' },
     });
 
     const poolerConfig = (await supaManagementClient.getPoolerConfig(projectId))
@@ -182,7 +177,7 @@ export class AppService {
       DB_PASSWORD: dbCreds.password,
       DB_NAME: dbCreds.database,
       TENANT_SECRET_KEY,
-      TENANT_SERVICE_KEY,
+      TENANT_SERVICE_KEY: '',
       TENANT_WORKER_LOGIN,
       TENANT_USER_ID: userId,
       IS_SUPABASE_PLATFORM: true,
@@ -191,6 +186,8 @@ export class AppService {
       SUPABASE_HOST,
       S3_REGION: project.region,
       S3_ENDPOINT: `https://${projectId}.storage.supabase.co/storage/v1/s3`,
+      PIPELINES_API_ENABLED: true,
+      SUPABASE_PROJECT_ID: projectId,
     };
 
     // Persist tenant
