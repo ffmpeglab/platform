@@ -117,58 +117,9 @@ Key details that matter here:
 
 ## Tier 2: Kubernetes (multi-tenant SaaS)
 
-Here it becomes a real **Ingress/Gateway controller**. With one release per tenant, you have two routing models — pick based on how tenants are addressed:
+Here it becomes a real **Ingress/Gateway controller**.
 
-### Model A: Path-based, shared host (matches the Compose setup)
-
-One Ingress for the whole org-level stack; tenant releases are reached *through* the API by project ID, not by distinct hostnames:
-
-```yaml
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: ffmpeglab-edge
-  namespace: ffmpeglab
-  annotations:
-    # nginx-ingress specifics
-    nginx.ingress.kubernetes.io/proxy-body-size: "2g"
-    nginx.ingress.kubernetes.io/proxy-request-buffering: "off"
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
-    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
-    nginx.ingress.kubernetes.io/configuration-snippet: |
-      more_set_headers "cross-origin-embedder-policy: require-corp";
-      more_set_headers "cross-origin-opener-policy: cross-origin";
-      more_set_headers "cross-origin-resource-policy: same-site";
-    cert-manager.io/cluster-issuer: letsencrypt-prod
-spec:
-  ingressClassName: nginx
-  tls:
-    - hosts: [app.ffmpeglab.com]
-      secretName: ffmpeglab-edge-tls
-  rules:
-    - host: app.ffmpeglab.com
-      http:
-        paths:
-          - path: /platform/
-            pathType: Prefix
-            backend: { service: { name: platform, port: { number: 7001 } } }
-          - path: /api/
-            pathType: Prefix
-            backend: { service: { name: ffmpeglab-api, port: { number: 3000 } } }
-          - path: /renders/
-            pathType: Prefix
-            backend: { service: { name: ffmpeglab-api, port: { number: 3000 } } }
-          - path: /files/
-            pathType: Prefix
-            backend: { service: { name: ffmpeglab-file, port: { number: 3000 } } }
-          - path: /webapp/
-            pathType: Prefix
-            backend: { service: { name: webapp, port: { number: 8080 } } }
-```
-
-> Note there is deliberately **no** route to tenant namespaces here. Tenants aren't individually addressable from outside — users hit the platform/API, which talks to tenant services internally. That keeps the blast radius of a compromised edge small.
-
-### Model B: Host-per-tenant (if tenants get their own subdomain)
+### Model: Host-per-tenant (tenants get their own subdomain)
 
 Then tenant releases need dynamic routing. Two options:
 
