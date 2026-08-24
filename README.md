@@ -1,4 +1,5 @@
-# Supabase Extension Template
+# FFmpegLab Platform
+
 
 [![Supabase](https://img.shields.io/badge/Supabase-3FCF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com)
 [![Vault](https://img.shields.io/badge/Vault-FFD700?style=for-the-badge&logo=vault&logoColor=black)](https://www.vaultproject.io/)
@@ -6,9 +7,13 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
 
-**A secure, idempotent foundation for building Supabase extensions that require Vault‑managed secrets, fine‑grained database permissions, and full organization/project management.**
+Supabase Extension Template · Vault · NestJS · TypeScript · MIT License
 
-This template handles **platform user authentication via Supabase Auth**, **OAuth2 Connect** to let users bring their own Supabase projects, provisions dedicated database users per tenant, stores all secrets in HashiCorp Vault, provides an omnidempotent API layer, and exposes **REST endpoints** for organizations, projects, tenant status, and OAuth2 flow – ready to use out of the box.
+A secure, idempotent foundation for building Supabase extensions that require Vault‑managed secrets, fine‑grained database permissions, and full organization/project management.
+
+This template handles platform user authentication via Supabase Auth, OAuth2 Connect to let users bring their own Supabase projects, provisions dedicated database users per tenant, stores all secrets in HashiCorp Vault, provides an omnidempotent API layer, and exposes REST endpoints for organizations, projects, tenant status, and the OAuth2 flow – ready to use out of the box.
+
+The platform is also the **tenant provisioning authority** for FFmpegLab's Kubernetes deployment: it writes tenant records into Vault, which the [Vault Secrets Operator](#kubernetes-deployment--vso--reloader) turns into cluster Secrets consumed by one Helm release per tenant — with [Reloader](https://github.com/stakater/Reloader) ensuring pods roll automatically whenever a tenant's credentials rotate.
 
 ---
 
@@ -16,32 +21,19 @@ This template handles **platform user authentication via Supabase Auth**, **OAut
 
 When building a Supabase extension (e.g., a file processing service, a data sync tool, or an analytics add‑on), you need to solve multiple challenges:
 
-1. **Who is using your platform?** – Users sign up/log in via Supabase Auth. The `userId` from the JWT scopes all operations.
-2. **Which organizations and projects do they have?** – The template integrates with Supabase's Management API to list organizations and their projects.
-3. **Which Supabase project do they want to connect?** – Users authorise your extension to access their own Supabase project via **Supabase Connect (OAuth2)** .
-4. **How to provision secure, isolated tenants?** – Creates dedicated database users per (user, project) pair, idempotently.
-5. **How to manage tenant lifecycle?** – Exposes endpoints to enable/disable tenants.
+- **Who is using your platform?** – Users sign up/log in via Supabase Auth. The `userId` from the JWT scopes all operations.
+- **Which organizations and projects do they have?** – The template integrates with Supabase's Management API to list organizations and their projects.
+- **Which Supabase project do they want to connect?** – Users authorise your extension to access their own Supabase project via Supabase Connect (OAuth2).
+- **How to provision secure, isolated tenants?** – Creates dedicated database users per `(user, project)` pair, idempotently.
+- **How to manage tenant lifecycle?** – Exposes endpoints to enable/disable tenants.
 
-This template solves all of these, with:
+What it gives you:
 
-- **Full REST API** for organizations, projects, tenants, and OAuth2 flow.
-- **Automatic OAuth2 token refresh**.
-- **Secure credential storage in Vault**.
-- **Idempotent provisioning** – safe to retry.
-
----
-
-## What It Provides
-
-| Feature | Description |
-|---------|-------------|
-| **Platform User Authentication** | Uses Supabase Auth to authenticate users of your extension. All endpoints are protected by `withSupabase` guard. |
-| **Organization & Project Listing** | Calls Supabase Management API to list the user's organizations and their projects. |
-| **OAuth2 Connect (Bring Your Own Supabase)** | Users authorise your extension to access their Supabase project via Supabase Connect. |
-| **Idempotent Tenant Provisioning** | Each platform user + external project pair gets a dedicated database user. Creation is idempotent. |
-| **Tenant Lifecycle Management** | Enable/disable tenants via a toggle endpoint. |
-| **Secure Credential Storage** | All secrets (OAuth2 tokens, database credentials) are stored in Vault. |
-| **Automated Token Refresh** | OAuth2 access tokens are refreshed automatically when expired. |
+- Full REST API for organizations, projects, tenants, and the OAuth2 flow.
+- Automatic OAuth2 token refresh.
+- Secure credential storage in Vault.
+- Idempotent provisioning – safe to retry.
+- A clear hand-off point to Kubernetes: every tenant record written here becomes deployable infrastructure, with automatic reload on credential rotation.
 
 ---
 
@@ -50,7 +42,7 @@ This template solves all of these, with:
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                    Your Extension (NestJS)                              │
-│  ┌───────────────────────────────────────────────────────────────────┐  │ 
+│  ┌───────────────────────────────────────────────────────────────────┐  │
 │  │  @UseGuards(withSupabase) – validates JWT, injects userClaims     │  │
 │  └───────────────────────────────────────────────────────────────────┘  │
 │  ┌───────────────────────────────────────────────────────────────────┐  │
@@ -69,54 +61,182 @@ This template solves all of these, with:
 │  │  - getTenant(), createTenant(), updateTenant()                    │  │
 │  │  - createSupaClient() – uses Vault-stored tokens                  │  │
 │  └───────────────────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
+└──────────────────────────────┬──────────────────────────────────────────┘
+                               ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                   HashiCorp Vault                                       │
-│  ┌─────────────────────────────────────────────────────────────────────┐│
-│  │  secret/users/{userId}          → OAuth2 session tokens             ││
-│  │  secret/tenants/{userId}/{projectId} → Tenant records & DB creds    ││
-│  └─────────────────────────────────────────────────────────────────────┘│
+│  secret/users/{userId}/session       → OAuth2 session tokens            │
+│  secret/users/{userId}/key           → tenant service key               │
+│  secret/tenants/{userId}/{projectId} → Tenant records & DB creds        │
+└──────────────────────────────┬──────────────────────────────────────────┘
+                               │ read-only (VSO policy)
+                               ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│              Kubernetes — one Helm release per tenant                   │
+│                                                                         │
+│   VSO ──writes──▶ K8s Secret ──watched by──▶ Reloader                   │
+│                                                 │ secret changed        │
+│                                                 ▼                       │
+│                              ffmpeglab/server pods                      │
+│                     (api / render / file / logs) rolled automatically   │
 └─────────────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
+
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                          Supabase (x2)                                  │
 │  ┌─────────────────────────────┐  ┌──────────────────────────────────┐  │
 │  │  Your Platform's Supabase   │  │  User's External Supabase        │  │
-│  │  - Auth (users table)       │  │  - PostgreSQL (per‑tenant user)  │  │
+│  │  - Auth (users table)       │  │  - PostgreSQL (per-tenant user)  │  │
 │  │  - Management API           │  │  - Storage                       │  │
-│  └─────────────────────────────┘  └──────────────────────────────────┘  │
+│  └─────────────────────────────┘  ┌──────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## API Endpoints (Fully Implemented)
+## End-to-End Flow
 
-The template exposes a comprehensive REST API. All endpoints are protected by the `withSupabase` guard, which validates the Supabase JWT from the `Authorization` header and injects the user's claims.
+### Flow 1 – Authentication & Discovery
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/platform/me` | Returns the authenticated platform user's info (from Supabase Auth). Also checks if the user has an OAuth2 session (i.e., has connected Supabase Connect). |
-| `GET` | `/platform/organizations` | Lists all Supabase organizations the authenticated user belongs to. |
-| `GET` | `/platform/projects/:orgId` | Lists all Supabase projects within the given organization. |
-| `GET` | `/platform/tenant/:projectId` | Retrieves the tenant record for the given project (if provisioned). Returns `id`, `name`, `status`, `ffmpeglabStatus`, `ref`, `region`, `created`. |
-| `PUT` | `/platform/tenant/:projectId/:status` | Toggles the tenant's `ffmpeglabStatus` (e.g., `"on"`/`"off"`). Updates the tenant record in Vault. |
-| `GET` | `/platform/login` | Initiates the OAuth2 flow with Supabase Connect. Returns the redirect URI to send the user to. |
-| `GET` | `/platform/connect/project/:projectId` | Provisions a tenant for the given project. If already provisioned and enabled, returns `{ status: 'on' }`; otherwise creates the tenant (idempotent) and returns `{ status: 'on' }`. |
-| `GET` | `/platform/oauth2/callback` | OAuth2 callback endpoint (handled separately; exchanges code, stores session, redirects to frontend). |
+```
+Frontend                     NestJS API                  Supabase
+   │                             │                           │
+   │ GET /platform/me            │                           │
+   │  Authorization: Bearer JWT  │                           │
+   │────────────────────────────▶│ withSupabase guard        │
+   │◀── user info + hasOAuth? ───│ validates JWT             │
+   │                             │                           │
+   │ GET /platform/organizations │                           │
+   │────────────────────────────▶│ Management API call       │
+   │◀── orgs list ───────────────│──────────────────────────▶│
+   │                             │                           │
+   │ GET /platform/projects/:orgId                           │
+   │────────────────────────────▶│ Management API call       │
+   │◀── projects list ───────────│──────────────────────────▶│
+```
 
-> **Note**: The `tenant` endpoints use the platform user's `userId` (from the JWT) to scope the operation – so users can only access their own tenants.
+### Flow 2 – OAuth2 Connect (Bring Your Own Supabase)
+
+```
+Frontend         NestJS API          Supabase Connect          Vault
+   │                 │                       │                   │
+   │ GET /login      │                       │                   │
+   │────────────────▶│ build OAuth2 URL      │                   │
+   │◀─ redirectURI ──│                       │                   │
+   │                 │                       │                   │
+   │ user authorises in browser ────────────▶│                   │
+   │                 │                       │                   │
+   │ redirect w/ code: GET /oauth2/callback  │                   │
+   │────────────────────────────────────────▶│ exchange code     │
+   │                 │◀── access+refresh ────│                   │
+   │                 │ save session ────────────────────────────▶│ secret/users/{userId}
+   │◀─ redirect to WEBAPP_HOST ──────────────│                   │
+```
+
+Expired access tokens are refreshed transparently on every authenticated call:
+
+```ts
+getSessionForUser(userId)
+  ├─ read secret/users/{userId}/session from Vault
+  ├─ if now < created + expires → return session ✅
+  └─ else → refresh() via client-oauth2
+              ├─ success → saveOauthSession() → overwrite in Vault
+              └─ failure → throw 'unable_to_refresh_session'
+```
+
+### Flow 3 – Tenant Provisioning (`GET /connect/project/:projectId`)
+
+```
+NestJS API                        Vault              User's Supabase Project
+    │                               │                          │
+    │ getTenant(userId, projectId)  │                          │
+    │──────────────────────────────▶│ tenants/{userId}/{proj}  │
+    │◀── exists & enabled? ─────────│                          │
+    │     YES → return {status:'on'} (idempotent short-circuit)│
+    │                                                          │
+    │ createSupaClient(userId) ← session token from Vault      │
+    │                                                          │
+    │ 1. generate DB creds (createPostgresCredentials)         │
+    │ 2. fetch anon key ── getProjectApiKeys(reveal:true) ────▶│
+    │ 3. apply migration 'ffmpeglab-init'                      │
+    │    (initSql + TENANT_SECRET_KEY) ───────────────────────▶│
+    │ 4. apply migration 'ffmpeglab-permissions'               │
+    │    (CREATE ROLE / GRANTs) ──────────────────────────────▶│
+    │ 5. getPoolerConfig ─────────────────────────────────────▶│
+    │                                                          │
+    │ build SupabaseTenant record                              │
+    │  { db creds, keys, host, region, S3 endpoint, flags }    │
+    │──────────────────────────────▶│ write tenants/{u}/{p}    │
+    │◀── newTenant ─────────────────│                          │
+```
+
+### Flow 4 – Tenant Lifecycle & Service Keys
+
+| Action | Path | Effect |
+|---|---|---|
+| Read | `GET /tenant/:projectId` | Vault read `tenants/{userId}/{projectId}` |
+| Toggle | `PUT /tenant/:projectId/:status` | Update `ffmpeglabStatus` on/off in Vault |
+| Service key | `getOrCreateTenantServiceKey` | Get-or-create `users/{userId}/key` (idempotent) |
+| Validate key | `validateUserTenantServiceKey` | Compare against Vault-stored key |
 
 ---
 
-## Environment Variables (All Required)
+## Vault Secrets Structure
+
+All secrets are stored at paths scoped to the platform `userId`:
+
+| Path | Content |
+|---|---|
+| `secret/users/{userId}/session` | `{ accessToken, refreshToken, created, expires }` |
+| `secret/users/{userId}/key` | `{ secretKey }` – service auth key |
+| `secret/tenants/{userId}/{projectId}` | Full tenant record incl. DB creds, anon key, `TENANT_SECRET_KEY`, S3 config |
+
+The tenant record is the contract between this platform and everything downstream (VSO, Reloader, Helm chart):
+
+```json
+{
+  "IS_SUPABASE_PLATFORM": true,
+  "PIPELINES_API_ENABLED": true,
+  "PLATFORM_HOST": "https://platform.ffmpeglab.com",
+  "S3_ENDPOINT": "https://{projectId}.storage.supabase.co/storage/v1/s3",
+  "S3_REGION": "eu-central-1",
+  "SUPABASE_ANON_KEY": "eyJ...",
+  "SUPABASE_HOST": "https://{projectId}.supabase.co",
+  "SUPABASE_PROJECT_ID": "{projectId}",
+  "TENANT_SECRET_KEY": "{password}",
+  "TENANT_SERVICE_KEY": "",
+  "TENANT_USER_ID": "{userId}",
+  "TENANT_WORKER_LOGIN": "worker@ffmpeglab.com"
+}
+```
+
+Every field becomes a key of the downstream Kubernetes Secret via `envFrom`. No variable name is hardcoded in the chart, so adding a field here requires no change there.
+
+---
+
+## API Endpoints (Fully Implemented)
+
+All endpoints are protected by the `withSupabase` guard, which validates the Supabase JWT from the `Authorization` header and injects the user's claims.
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/platform/me` | Authenticated user info; also checks whether an OAuth2 session exists |
+| GET | `/platform/organizations` | Lists all Supabase organizations the user belongs to |
+| GET | `/platform/projects/:orgId` | Lists all projects within the given organization |
+| GET | `/platform/tenant/:projectId` | Retrieves the tenant record (if provisioned): `id, name, status, ffmpeglabStatus, ref, region, created` |
+| PUT | `/platform/tenant/:projectId/:status` | Toggles `ffmpeglabStatus` (`"on"`/`"off"`); updates Vault |
+| GET | `/platform/login` | Initiates the OAuth2 flow; returns the redirect URI |
+| GET | `/platform/connect/project/:projectId` | Provisions a tenant (idempotent). Returns `{ status: 'on' }` |
+| GET | `/platform/oauth2/callback` | Exchanges code, stores session in Vault, redirects to frontend |
+
+> Tenant endpoints use the `userId` from the JWT to scope all operations – users can only access their own tenants.
+
+---
+
+## Environment Variables
 
 Create a `.env` file in the root:
 
-```env
+```bash
 # ============================================
 # 1. PLATFORM SUPABASE (Auth & Management API)
 # ============================================
@@ -157,57 +277,23 @@ SUPABASE_CLOUD_POSTGRES_POOLER_URL=.pooler.supabase.com
 SUPABASE_CLOUD_POSTGRES_POOLER_PORT=6543
 ```
 
-### Environment Variables Reference
-
 | Variable | Purpose | Required |
-|----------|---------|----------|
-| `SUPABASE_URL` | Your platform's Supabase project URL. | ✅ Yes |
-| `SUPABASE_PUBLISHABLE_KEY` | Publishable (anon) key for the platform Supabase (used by `withSupabase` guard). | ✅ Yes |
-| `SUPABASE_SECRET_KEY` | Service role key for the platform Supabase (used to validate JWTs). | ✅ Yes |
-| `SUPABASE_JWKS_URL` | JWKS URL for the platform Supabase (for JWT verification). | ✅ Yes |
-| `SUPA_CONNECT_CLIENT_ID` | OAuth2 client ID from Supabase Connect. | ✅ Yes |
-| `SUPA_CONNECT_CLIENT_SECRET` | OAuth2 client secret. | ✅ Yes |
-| `VAULT_URL` | HashiCorp Vault server address. | ✅ Yes |
-| `VAULT_TOKEN` | Authentication token for Vault. | ✅ Yes |
-| `PLATFORM_HOST` | Public URL of this API service (for OAuth2 redirects). | ✅ Yes |
-| `WEBAPP_HOST` | Your frontend URL (where users are sent after OAuth). | ✅ Yes |
-| `FFMPEGLAB_PLATFORM_PORT` | Port the server listens on. | ✅ Yes |
-| `TOKEN_EXPIRE_TIME` | Session expiry in seconds (default: 3600). | ❌ Optional |
-| `COOKIE_SECRET` | Secret used to sign session cookies. **Use a long, random string** (min 32 chars). | ✅ Yes |
-| `SUPABASE_CLOUD_POSTGRES_POOLER_URL` | Pooler hostname suffix (e.g., `.pooler.supabase.com`). | ✅ Yes |
-| `SUPABASE_CLOUD_POSTGRES_POOLER_PORT` | Pooler port (usually `6543`). | ✅ Yes |
-
----
-
-## How It Works (Step‑by‑Step)
-
-### 1. Platform User Logs In
-- User signs up / logs in via Supabase Auth on your frontend.
-- Frontend obtains a JWT and sends it in `Authorization: Bearer <jwt>` to your API.
-- The `withSupabase` guard validates the JWT and attaches `userClaims` to the request context.
-
-### 2. User Lists Organizations & Projects
-- The frontend calls `GET /platform/organizations` → returns the user's Supabase orgs.
-- Then calls `GET /platform/projects/:orgId` → lists all projects in that org.
-
-### 3. User Connects a Project (OAuth2)
-- The frontend calls `GET /platform/login` to get the OAuth2 redirect URI.
-- The user is redirected to Supabase Connect to authorise your extension.
-- After authorisation, Supabase redirects to `/platform/oauth2/callback` with a code.
-- The callback exchanges the code, stores the session in Vault under `secret/users/{userId}`, and redirects back to your frontend with status.
-
-### 4. Tenant Provisioning (Idempotent)
-- When the user selects a project, the frontend calls `GET /platform/connect/project/:projectId`.
-- The service checks Vault for an existing tenant at `secret/tenants/{userId}/{projectId}`.
-- If found and enabled, it returns quickly.
-- If not found, it generates deterministic database credentials, creates the database user in the external Supabase project, and stores the tenant record in Vault.
-
-### 5. Tenant Management
-- `GET /platform/tenant/:projectId` retrieves the tenant record.
-- `PUT /platform/tenant/:projectId/:status` toggles the tenant's `ffmpeglabStatus` (e.g., enable/disable).
-
-### 6. Ongoing Operations
-- All endpoints automatically refresh the OAuth2 access token if expired (using the stored refresh token), ensuring seamless operation.
+|---|---|---|
+| `SUPABASE_URL` | Platform Supabase project URL | ✅ Yes |
+| `SUPABASE_PUBLISHABLE_KEY` | Publishable key for the `withSupabase` guard | ✅ Yes |
+| `SUPABASE_SECRET_KEY` | Service role key for JWT validation | ✅ Yes |
+| `SUPABASE_JWKS_URL` | JWKS URL for JWT verification | ✅ Yes |
+| `SUPA_CONNECT_CLIENT_ID` | OAuth2 client ID from Supabase Connect | ✅ Yes |
+| `SUPA_CONNECT_CLIENT_SECRET` | OAuth2 client secret | ✅ Yes |
+| `VAULT_URL` | HashiCorp Vault server address | ✅ Yes |
+| `VAULT_TOKEN` | Vault authentication token | ✅ Yes |
+| `PLATFORM_HOST` | Public URL of this API (for OAuth2 redirects) | ✅ Yes |
+| `WEBAPP_HOST` | Frontend URL (post-OAuth redirect target) | ✅ Yes |
+| `FFMPEGLAB_PLATFORM_PORT` | Port the server listens on | ✅ Yes |
+| `TOKEN_EXPIRE_TIME` | Session expiry in seconds (default 3600) | ❌ Optional |
+| `COOKIE_SECRET` | Cookie signing secret (min 32 chars) | ✅ Yes |
+| `SUPABASE_CLOUD_POSTGRES_POOLER_URL` | Pooler hostname suffix | ✅ Yes |
+| `SUPABASE_CLOUD_POSTGRES_POOLER_PORT` | Pooler port (usually 6543) | ✅ Yes |
 
 ---
 
@@ -215,27 +301,21 @@ SUPABASE_CLOUD_POSTGRES_POOLER_PORT=6543
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) (v22 or newer)
-- [HashiCorp Vault](https://www.vaultproject.io/) (self‑hosted or cloud)
-- **Two Supabase projects** (or one, but conceptually):
-  1. **Platform Supabase** – handles authentication for your extension's users.
-  2. **External Supabase** – the user's own project (they connect via OAuth2).
-- [Supabase Connect](https://supabase.com/docs/guides/integrations/build-a-supabase-oauth-integration) configured for OAuth2.
+- Node.js (v22 or newer)
+- HashiCorp Vault (self-hosted or cloud)
+- Two Supabase projects:
+  - **Platform Supabase** – handles authentication for your extension's users.
+  - **External Supabase** – the user's own project (connected via OAuth2).
+- Supabase Connect configured for OAuth2.
+- For cluster deployment: a Kubernetes cluster with VSO and Reloader installed (see below).
 
 ### Installation
 
 ```bash
-# Clone the template
 git clone https://github.com/ffmpeglab/platform.git my-extension
 cd my-extension
-
-# Install dependencies
 npm install
-
-# Build
 npm run build
-
-# Start the server
 npm start
 ```
 
@@ -246,51 +326,159 @@ docker build -t my-extension .
 docker run -p 7001:7001 --env-file .env my-extension
 ```
 
----
-
-## Vault Secrets Structure
-
-The template stores secrets at these Vault paths, scoped to the platform `userId`:
-
-| Path | Content |
-|------|---------|
-| `secret/users/{userId}` | Platform user's OAuth2 session: `{ access_token, refresh_token, expires_at }` |
-| `secret/tenants/{userId}/{projectId}` | Tenant record: `{ id, name, status, ffmpeglabStatus, ref, region, created, databaseUser, databasePassword }` |
-
----
-
-## Development
+### Development
 
 ```bash
-# Watch mode
-npm run start:dev
-
-# Lint
+npm run start:dev   # watch mode
 npm run lint
-
-# Format
 npm run format
-
-# Test
 npm test
 ```
 
 ---
 
-## Customising for Your Extension
+## Kubernetes Deployment — VSO + Reloader
 
-- **Add business logic** – extend or replace `AppService`.
-- **Add new endpoints** – create additional controllers.
-- **Adjust OAuth2 scopes** – modify the Supabase Connect request if you need more permissions.
-- **Extend tenant provisioning** – e.g., create custom schemas, set up RLS policies, or initialise tables when a tenant is created.
+The platform does not deploy workloads itself. It writes tenant records into Vault; the **Vault Secrets Operator (VSO)** reads them and produces Kubernetes Secrets; one Helm release of the FFmpegLab server runs per tenant. **[Reloader](https://github.com/stakater/Reloader)** watches those Secrets and rolls the workloads automatically whenever a tenant's credentials change — no manual restarts, no stale credentials.
+
+```
+Platform                Vault                Cluster
+   │                      │                      │
+   │ createTenant()       │                      │
+   │─────────────────────▶│ write tenants/{u}/{p}│
+   │                      │                      │
+   │                      │◀── auth (K8s SA) ────│ VSO
+   │                      │── tenant JSON ──────▶│ K8s Secret
+   │                      │                      │
+   │                      │                      │ Reloader watches Secret
+   │                      │                      │   ├─ on create/update ─▶ rollout
+   │                      │                      │ helm upgrade --install
+   │                      │                      │ (one release = one tenant)
+```
+
+This closes the credential-rotation loop end to end:
+
+> Platform rotates a tenant's credentials in Vault → VSO updates the K8s Secret → Reloader detects the change → pods roll → the instance is running with fresh credentials. Zero manual intervention.
+
+### Responsibility boundary
+
+| Owns | What |
+|---|---|
+| **This platform** | Creating tenants, writing their records into Vault |
+| **VSO** | Reading the tenant record from Vault, producing the Secret |
+| **Reloader** | Watching that Secret, rolling workloads when it changes |
+| **The chart** | Deployments, Service, storage, health checks |
+| **deploy.sh** | Applying operator resources and installing the chart |
+| **Cluster owner** | The cluster itself, and storage that supports it |
+
+> The FFmpegLab deployment never creates a tenant. It receives one — and re-receives it automatically whenever it changes.
+
+### Installing the operators
+
+```bash
+# Vault Secrets Operator
+helm repo add hashicorp https://helm.releases.hashicorp.com
+helm install vault-secrets-operator hashicorp/vault-secrets-operator \
+  --namespace vault-secrets-operator --create-namespace \
+  --values deploy/vso/values.yaml \
+  --set defaultVaultConnection.address=https://<your-vault>
+
+# Reloader
+helm repo add stakater https://stakater.github.io/stakater-charts
+helm repo update
+helm install reloader stakater/reloader
+```
+
+### Connecting an external Vault (recommended)
+
+When Vault runs outside the cluster, configure its Kubernetes auth method with explicit reviewer credentials so it can validate service-account tokens:
+
+```bash
+vault write auth/kubernetes/config \
+    kubernetes_host="https://10.0.0.2:6443" \
+    token_reviewer_jwt="your_token" \
+    disable_iss_validation=true \
+    disable_local_ca_jwt=true \
+    kubernetes_ca_cert="-----BEGIN CERTIFICATE-----
+MIIDHDCCAgSgAwIBAgIRAOvAAqfto/yAz18axhiAeCkwDQYJKoZIhvcNAQELBQAw
+GDEWMBQGA1UEAxMNa3ViZXJuZXRlcy1jYTAeFw0yNjA4MjIyMzA0NTRaFw00NjA4
+MjIyMzA0NTRaMBgxFjAUBgNVBAMTDWt1YmVybmV0ZXMtY2EwggEiMA0GCSqGSIb3
+DQEBAQUAA4IBDwAwggEKAoIBAQCan4QmLIZPmJUQ2FeECbQ8ah0NxxVU67dBtOQA
+XnnMsIpVixbshWErRWqasQihfzr78xh71suJqenrC/ZBlVNMJ/JfdpCiFYdFNwQb
+X9GaAOq5EQy6oE/6eSVC5s80dW5zjW+TFkUwV7smTmmIlwzYgmCvhOmT0jeYCCTe
+WBExI91uSHJqTe5oLG8NFyE6tUhY9X5JW2HuI/8vtJ0l6ReIZJp7IjaEN2bge+eB
+Rtsk3bzh5eS3P8RYnvx6QTzsicetuhIHJAzAqyXxzeRPmaRHQmtbIOZPQ5opoZa2
+XxIRtlwqZ/08JBAMWIyGfpUz3Bx9Rp7crHFSEV4Cffvr2N4bAgMBAAGjYTBfMA4G
+A1UdDwEB/wQEAwIChDAdBgNVHSUEFjAUBggrBgEFBQcDAgYIKwYBBQUHAwEwDwYD
+VR0TAQH/BAUwAwEB/zAdBgNVHQ4EFgQUb2gUjcjaIKHi+uoqJt7IHf5HzV0wDQYJ
+KoZIhvcNAQELBQADggEBAEWVjItSSmEZSp0z0pvkLWQaIt8Bnm6Fn4LzjCplAJrh
+Ji879yCJuoA84q74zlg/DWBqxIz7oW/idej5zFclNs9fj4f6vJThi2L9iOVRz+cy
+WpIY5UDTczCx7LZLCVMTcgzuS1cL2D2Fg9ebgNO3JqkcN3LjC/JzMF8BmxaDX9n8
+XZc37doyq4dPgswlSwY3URs6tOW4FGYhv72nLndsg0WmnpEb+cqPsG0qjol+zeIF
+E0dOQkdsN9CmLffsqCFD3O26M3FWlb7ab/+9f39yHU1Agy0TonN8C9X0HHAOMxzX
+RSv2UiTcwQK24inLFtKLb27dJHzZBzakmeiJH9hkQ7E=
+-----END CERTIFICATE-----"
+```
+
+Then bind a role to the service account VSO authenticates as:
+
+```bash
+vault policy write ffmpeglab-tenants - <<'HCL'
+path "secret/data/tenants/*" {
+  capabilities = ["read", "list"]
+}
+HCL
+
+vault write auth/kubernetes/role/ffmpeglab \
+  bound_service_account_names=ffmpeglab-vault \
+  bound_service_account_namespaces=<namespace> \
+  policies=ffmpeglab-tenants \
+  ttl=1h
+```
+
+Both belong to whoever administers Vault — a deploy-time role cannot enable auth methods.
+
+### Wiring Reloader into the workload
+
+The chart annotates each Deployment so Reloader picks up changes to the tenant Secret:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ffmpeglab-api
+  annotations:
+    reloader.stakater.com/auto: "true"        # roll on any referenced Secret/ConfigMap change
+spec:
+  template:
+    spec:
+      containers:
+        - name: api
+          image: ffmpeglab/server:0.4.1
+          envFrom:
+            - secretRef:
+                name: ffmpeglab-tenant        # produced by VSO from the Vault record
+```
+
+Notes:
+
+- `reloader.stakater.com/auto: "true"` is sufficient here — every component consumes the same tenant Secret via `envFrom`, so any field change triggers a rollout of exactly the affected release.
+- Because one release = one tenant, a rotated credential only rolls *that* tenant's pods — multi-tenant blast radius is contained by design.
+- The chart's existing `maxSurge: 0` rolling strategy still applies during Reloader-triggered rollouts, protecting the database connection cap.
+- If you run GitOps (ArgoCD/Flux), consider `--reload-strategy=annotations` on the Rel controller to avoid sync drift.
+- If several tenant fields are updated at once, you can add `deployment.reloader.stakater.com/pause-period: "5m"` to debounce back-to-back rollouts.
+
+### One release = one instance
+
+The application binds one process to one database connection and one queue at startup. It cannot serve two databases. Multi-tenancy therefore lives in the deployment layer: another tenant means another release of the same chart, not a configuration change inside a running one. That is why the chart knows nothing about tenants – it takes its credentials from a Secret that VSO produced from the record this platform wrote, and Reloader keeps it current.
+
+See `deploy/docs/architecture.md` in the server repository for the full runtime architecture (api / render / file / logs roles, pgmq queues, shared document directory).
 
 ---
 
-## 🧭 Deployment & Infrastructure
+## Deployment Behind nginx
 
-The FFmpegLab Platform is designed to be deployed behind a reverse proxy, typically **nginx**, which handles routing, CORS headers, and domain restrictions. This setup ensures that all services (API, Platform, Supabase) are served from a **single domain**, preventing cross-origin issues and centralising access control.
-
-A production‑grade nginx configuration (similar to the one used in the [FFmpegLab WebApp](https://github.com/ffmpeglab/webapp/blob/main/nginx.conf)) looks like this:
+The platform is designed to be deployed behind a reverse proxy, typically nginx, which handles routing, CORS headers, and domain restrictions. All services (API, Platform, Supabase) are served from a single domain, preventing cross-origin issues and centralising access control.
 
 ```nginx
 upstream api {
@@ -315,88 +503,63 @@ server {
     add_header cross-origin-opener-policy "cross-origin";
     add_header cross-origin-resource-policy "cross-origin";
 
-    # Serve the static frontend
-    location / {
-        try_files $${ESCAPED_URI} /webapp/index.html;
-    }
+    location / { try_files $${ESCAPED_URI} /webapp/index.html; }
+    location /webapp/ { try_files $${ESCAPED_URI} /webapp/index.html; }
+    location = /config.json { try_files $${ESCAPED_URI} $${ESCAPED_URI}/ /webapp/config.json; }
+    location = /templates.json { try_files $${ESCAPED_URI} $${ESCAPED_URI}/ /webapp/templates.json; }
 
-    location /webapp/ {
-        try_files $${ESCAPED_URI} /webapp/index.html;
-    }
+    location /auth/    { proxy_pass http://supabase; }
+    location /rest/    { proxy_pass http://supabase; }
+    location /storage/ { proxy_pass http://supabase; }
+    location /platform/ { proxy_pass http://platform; }
 
-    location = /config.json {
-        try_files $${ESCAPED_URI} $${ESCAPED_URI}/ /webapp/config.json;
-    }
-
-    location = /templates.json {
-        try_files $${ESCAPED_URI} $${ESCAPED_URI}/ /webapp/templates.json;
-    }
-
-    # Proxy requests to the respective backends
-    location /auth/ {
-        proxy_pass http://supabase;
-    }
-
-    location /rest/ {
-        proxy_pass http://supabase;
-    }
-
-    location /storage/ {
-        proxy_pass http://supabase;
-    }
-
-    location /platform/ {
-        proxy_pass http://platform;
-    }
-
-    location /api {
-        proxy_pass http://api;
-    }
-
-    location /renders/ {
-        proxy_pass http://api;
-    }
-
-    location /files/ {
-        proxy_pass http://api;
-    }
-
-    location /pipelines/ {
-        proxy_pass http://api;
-    }
+    location /api/       { proxy_pass http://api; }
+    location /renders/   { proxy_pass http://api; }
+    location /files/     { proxy_pass http://api; }
+    location /pipelines/ { proxy_pass http://api; }
 }
 ```
 
-### How This Works with the Platform
+Why this setup:
 
-- **Single‑Domain Architecture** – All traffic enters through a single nginx instance, which routes requests to the correct upstream service based on the URL path. This eliminates CORS preflight requests and simplifies client‑side configuration.
-- **Security Headers** – The `cross-origin-*` headers enforce a strict cross‑origin isolation policy, which is required for features like `SharedArrayBuffer` and helps prevent side‑channel attacks.
-- **Path‑Based Routing** – Requests to `/platform/` are proxied directly to the FFmpegLab Platform service, while `/auth/`, `/rest/`, and `/storage/` go to Supabase, and `/api`, `/renders/`, `/files/`, and `/pipelines/` go to the main API service.
-- **Restricted Domain** – By configuring nginx to listen on a specific domain and not exposing individual services directly, you ensure that the Platform can only be accessed through the approved frontend, reducing the attack surface.
+- **Single-domain architecture** – path-based routing eliminates CORS preflight requests and simplifies client-side configuration.
+- **Security headers** – strict cross-origin isolation required for features like `SharedArrayBuffer`.
+- **Restricted domain** – individual services are never exposed directly; only the approved frontend can reach them.
 
-When deploying your own extension based on this template, you can adapt this nginx configuration to:
-- Point the `platform` upstream to your instance of this service.
-- Adjust the `api` upstream to your own business‑logic API (if you have one).
-- Keep or remove the other location blocks depending on which services you use.
+When deploying your own extension based on this template, point the `platform` upstream at your instance of this service and adjust or remove the other location blocks as needed.
 
-This setup gives you a clean, secure, and scalable foundation for running your Supabase extension in production.
+---
+
+## Customising for Your Extension
+
+- **Add business logic** – extend or replace `AppService`.
+- **Add new endpoints** – create additional controllers.
+- **Adjust OAuth2 scopes** – modify the Supabase Connect request if you need more permissions.
+- **Extend tenant provisioning** – e.g., create custom schemas, set up RLS policies, or initialise tables when a tenant is created.
+- **Add tenant record fields** – any new field you write into the tenant record automatically reaches the deployed instance as an environment variable via VSO + `envFrom`, and Reloader will roll the pods when it changes.
+
+---
+
+## Key Design Properties
+
+- **Idempotency everywhere** – tenant creation checks Vault first; the service key is get-or-create; migrations are safe to retry.
+- **Zero secrets in app state** – all tokens and credentials live only in Vault; the API is stateless.
+- **Per-tenant isolation** – dedicated Postgres role per `(userId, projectId)` pair, scoped by the JWT-derived userId.
+- **Self-healing sessions** – expired OAuth tokens are transparently refreshed before any Management API call.
+- **Self-healing deployments** – credential rotation flows from Vault through VSO to Reloader-triggered rollouts without human action.
+- **Clean hand-off** – the tenant record in Vault is the single contract between provisioning (here) and deployment (Kubernetes).
 
 ---
 
 ## License
 
-This project is licensed under the MIT License – see the [LICENSE](https://github.com/ffmpeglab/platform/blob/main/LICENSE) file for details.
-
----
+MIT License – see [LICENSE](LICENSE).
 
 ## Links
 
-- **Website**: [ffmpeglab.com](https://ffmpeglab.com)
-- **GitHub**: [github.com/ffmpeglab/platform](https://github.com/ffmpeglab/platform)
-- **Documentation**: [ffmpeglab.com/docs](https://ffmpeglab.com/docs)
-- **Discord**: [Join our community](https://discord.gg/ffmpeglab)
+- Website: [ffmpeglab.com](https://ffmpeglab.com)
+- GitHub: [github.com/ffmpeglab/platform](https://github.com/ffmpeglab/platform)
+- Documentation: [ffmpeglab.com/docs](https://ffmpeglab.com/docs)
+- Discord: [Join our community](https://discord.gg/ffmpeglab)
 
----
-
-**Built with ❤️ by the FFmpegLab team. Open source, self‑hostable, and privacy‑first.**  
-Use this template to accelerate your own Supabase extension development.
+Built with ❤️ by the FFmpegLab team. Open source, self-hostable, and privacy-first.
