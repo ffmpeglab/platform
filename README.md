@@ -394,9 +394,15 @@ helm install reloader stakater/reloader
 When Vault runs outside the cluster, configure its Kubernetes auth method with explicit reviewer credentials so it can validate service-account tokens:
 
 ```bash
+  kubectl create serviceaccount vault-reviewer -n vault-secrets-operator
+  kubectl create clusterrolebinding vault-reviewer-binding     --clusterrole=system:auth-delegator --serviceaccount=vault-secrets-operator:vault-reviewer
+  TOKEN_REVIEWER_JWT=$(kubectl get secret vault-reviewer-token -n vault-secrets-operator -o jsonpath='{.data.token}' | base64 --decode)
+```
+
+```bash
 vault write auth/kubernetes/config \
     kubernetes_host="https://10.0.0.2:6443" \
-    token_reviewer_jwt="your_token" \
+    token_reviewer_jwt="${TOKEN_REVIEWER_JWT}" \
     disable_iss_validation=true \
     disable_local_ca_jwt=true \
     kubernetes_ca_cert="-----BEGIN CERTIFICATE-----
@@ -431,10 +437,58 @@ HCL
 
 vault write auth/kubernetes/role/ffmpeglab \
   bound_service_account_names=ffmpeglab-vault \
-  bound_service_account_namespaces=<namespace> \
+  bound_service_account_namespaces=ffmpeglab \
   policies=ffmpeglab-tenants \
   ttl=1h
 ```
+
+### To run the TF template you would need to setup also the need the Vault External Secret Operator
+
+First we need a role
+```sh
+vault write auth/kubernetes/role/external-secrets \
+  bound_service_account_names=external-secrets \
+  bound_service_account_namespaces=external-secrets \
+  policies=external-secrets \
+  ttl=1h
+```
+
+Then lets install the module
+```sh
+helm repo add external-secrets https://charts.external-secrets.io 2>/dev/null
+helm repo update
+
+helm install external-secrets external-secrets/external-secrets \
+  --namespace external-secrets --create-namespace \
+  --version 2.9.0 \
+  --set installCRDs=true
+```
+
+add this chart
+```yml
+apiVersion: external-secrets.io/v1
+kind: ClusterSecretStore
+metadata:
+  name: vault-backend
+spec:
+  provider:
+    vault:
+      server: https://vault.ffmpeglab.com   # no trailing slash
+#      caBundle: <base64 CA cert>                   # only if self-signed TLS
+      path: secret                                 # KV v2 mount name
+      version: v2
+      auth:
+        kubernetes:
+          mountPath: kubernetes                    # where kubernetes auth is enabled
+          role: external-secrets
+```
+
+we apply it and check the store
+```sh
+kubectl apply -f external-secrets.yml
+kubectl get clustersecretstore vault-backend    # wait for STATUS: True
+```
+
 
 Both belong to whoever administers Vault — a deploy-time role cannot enable auth methods.
 
