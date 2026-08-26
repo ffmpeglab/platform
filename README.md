@@ -442,7 +442,7 @@ vault write auth/kubernetes/role/ffmpeglab \
   ttl=1h
 ```
 
-### To run the TF template you would need to setup also the need the Vault External Secret Operator
+### To run the TF you would need to setup also the External Secrets Operator (ESO)
 
 First we need a role
 ```sh
