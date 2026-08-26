@@ -449,7 +449,7 @@ First we need a role
 vault write auth/kubernetes/role/external-secrets \
   bound_service_account_names=external-secrets \
   bound_service_account_namespaces=external-secrets \
-  policies=external-secrets \
+  policies=ffmpeglab-tenants \
   ttl=1h
 ```
 
