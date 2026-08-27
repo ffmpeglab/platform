@@ -3,6 +3,7 @@ import * as vault from 'vault-client-typescript';
 export const SUPABASE_PLATFORM = 'https://api.supabase.com/';
 
 export const PLATFORM_HOST = process.env.PLATFORM_HOST as string;
+export const WEBAPP_BASE = process.env.WEBAPP_HOST as string; // e.g. https://app.ffmpeglab.com
 
 export const config = {
   clientId: process.env.SUPA_CONNECT_CLIENT_ID,

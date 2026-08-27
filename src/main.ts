@@ -7,9 +7,20 @@ import session from 'express-session';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as yaml from 'js-yaml';
+import * as express from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // Capture raw body for webhook signature verification
+  app.use(
+    express.json({
+      verify: (req, res, buf) => {
+        (req as any).rawBody = buf;
+      },
+    }),
+  );
+
   const config = new DocumentBuilder()
     .setTitle('FFmpegLab Platform')
     .setDescription('FFmpeglab Platform API')
@@ -24,12 +35,11 @@ async function bootstrap() {
     fs.readFileSync(externalSpecPath, 'utf8'),
   );
 
-  // 3. Inject the external types/schemas into your local spec
   if (externalSpec.components && externalSpec.components.schemas) {
     document.components = document.components || {};
     document.components.schemas = {
       ...document.components.schemas,
-      ...externalSpec.components.schemas, // Merges external types
+      ...externalSpec.components.schemas,
     };
   }
 
@@ -40,14 +50,24 @@ async function bootstrap() {
       content: document,
     }),
   );
+
+  // Session cookie with secure, sameSite=none for cross-origin
   app.use(
     session({
       secret: process.env.COOKIE_SECRET as string,
       resave: false,
-      saveUninitialized: false,
+      saveUninitialized: true, // needed for GitLab state
+      cookie: {
+        secure: true, // required for sameSite=none
+        sameSite: 'none',
+        maxAge: 10 * 60 * 1000,
+      },
     }),
   );
+
+  // CORS with credentials support
   app.enableCors();
+
   await app.listen(FFMPEGLAB_PLATFORM_PORT);
 }
 bootstrap();

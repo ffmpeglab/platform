@@ -122,3 +122,54 @@ export class SupabaseTenantDTO implements Omit<
   @ApiProperty()
   created_at: string;
 }
+
+export type Platform = 'github' | 'gitlab';
+
+export interface PipelineConfig {
+  id: string;
+  repoFullName: string; // e.g. "owner/repo" or "group/project"
+  platform: Platform;
+  path: string; // path inside the repo e.g. ".ffmpeglab/pipeline.yml"
+  ref: string; // branch/tag
+  projectId: string; // Supabase project ID to apply migrations to
+  status: 'on' | 'off';
+  createdAt: number;
+  updatedAt: number;
+  lastCommitSha?: string;
+}
+
+export interface RepoSession {
+  accessToken: string;
+  refreshToken?: string;
+  created: number;
+  expires: number;
+}
+
+export class CreatePipelineDTO {
+  @ApiProperty()
+  platform: Platform;
+  @ApiProperty({ example: 'acme/video-api' })
+  repoFullName: string;
+  @ApiProperty({
+    example: '.ffmpeglab/pipeline.yml',
+    description: 'Path of the pipeline definition inside the repository',
+  })
+  path: string;
+  @ApiProperty({ example: 'main' })
+  ref: string;
+  @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000' })
+  projectId: string;
+}
+export class UpdatePipelineDTO {
+  @ApiProperty({ required: false })
+  path?: string;
+  @ApiProperty({ required: false })
+  ref?: string;
+  @ApiProperty({ enum: ['on', 'off'], required: false })
+  status?: 'on' | 'off';
+}
+export interface GitHubInstallation {
+  installationId: number;
+  installationToken: string;
+  created: number;
+}
