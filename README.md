@@ -15,6 +15,8 @@ This template handles platform user authentication via Supabase Auth, OAuth2 Con
 
 The platform is also the **tenant provisioning authority** for FFmpegLab's Kubernetes deployment: it writes tenant records into Vault, which the [Vault Secrets Operator](#kubernetes-deployment--vso--reloader) turns into cluster Secrets consumed by one Helm release per tenant — with [Reloader](https://github.com/stakater/Reloader) ensuring pods roll automatically whenever a tenant's credentials rotate.
 
+Originaly this template was built for ffmpeglab so ffmpeglab can be here and there as example of tenant
+
 ---
 
 ## Why This Template?
@@ -611,8 +613,8 @@ MIT License – see [LICENSE](LICENSE).
 
 ## Links
 
-- Website: [ffmpeglab.com](https://ffmpeglab.com)
-- GitHub: [github.com/ffmpeglab/platform](https://github.com/ffmpeglab/platform)
-- Documentation: [ffmpeglab.com/docs](https://ffmpeglab.com/docs)
+- Website: [opentenant.org](https://opentenant.org)
+- GitHub: [github.com/opentenant/platform](https://github.com/opentenant/platform)
+- Documentation: [platform.opentenant.org/docs](https://platform.opentenant.org/docs)
 
 Built with ❤️ by the OpenTenant team. Open source, self-hostable, and privacy-first.
