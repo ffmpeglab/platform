@@ -1,4 +1,4 @@
-# FFmpegLab Platform
+# OpenTenant Platform
 
 
 [![Supabase](https://img.shields.io/badge/Supabase-3FCF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com)
@@ -614,6 +614,5 @@ MIT License – see [LICENSE](LICENSE).
 - Website: [ffmpeglab.com](https://ffmpeglab.com)
 - GitHub: [github.com/ffmpeglab/platform](https://github.com/ffmpeglab/platform)
 - Documentation: [ffmpeglab.com/docs](https://ffmpeglab.com/docs)
-- Discord: [Join our community](https://discord.gg/ffmpeglab)
 
-Built with ❤️ by the FFmpegLab team. Open source, self-hostable, and privacy-first.
+Built with ❤️ by the OpenTenant team. Open source, self-hostable, and privacy-first.

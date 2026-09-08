@@ -34,7 +34,6 @@ export function createPostgresqlQueryForCredentials(creds: {
   `;
 }
 
-/** Secure password generator (example) */
 export function generateSecurePassword() {
   const array = new Uint32Array(10);
   return crypto.getRandomValues(array).join('').toString();
