@@ -1,5 +1,5 @@
 {
-  "name": "ffmpeglab-platform-sdk",
+  "name": "@opentenant/platform",
   "description": "typescript client for ffmpeglab platform",
   "author": "danilaplee",
   "repository": {
