@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  NotFoundException,
   Param,
   Post,
   Put,
@@ -107,8 +108,8 @@ export class AppController {
   @ApiParam({ name: 'id' })
   @ApiParam({ name: 'status' })
   async toggleTenant(
-    @Param('id') id,
-    @Param('status') status,
+    @Param('id') id: string,
+    @Param('status') status: "on" | "off",
     @SupabaseCtx('userClaims') user: SupabaseContext['userClaims'],
   ) {
     const tenant = await this.appService.getTenant(user!.id, id);
@@ -116,6 +117,7 @@ export class AppController {
       tenant.ffmpeglabStatus = status;
       return await this.appService.updateTenant(tenant);
     }
+    throw NotFoundException
   }
 
   @Post('platform/migration')
