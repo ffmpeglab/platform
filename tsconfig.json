@@ -24,6 +24,7 @@
     "noFallthroughCasesInSwitch": false
   },
   "exclude": [
-    "sdk"
+    "sdk/ts/*",
+    "sdk/ts/*/**"
   ]
 }

@@ -107,7 +107,7 @@ export class AppController {
   @ApiParam({ name: 'id' })
   @ApiParam({ name: 'status' })
   async toggleTenant(
-    @Param('projectId') id,
+    @Param('id') id,
     @Param('status') status,
     @SupabaseCtx('userClaims') user: SupabaseContext['userClaims'],
   ) {

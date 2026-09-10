@@ -8,3 +8,4 @@ sdk/*
 !sdk/*/README.md
 !sdk/*/tsconfig.json
 !sdk/yaml
+.terraform
