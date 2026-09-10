@@ -108,13 +108,12 @@ export class AppController {
   @ApiParam({ name: 'id' })
   @ApiParam({ name: 'status' })
   async toggleTenant(
-    @Param('id') id: string,
-    @Param('status') status: "on" | "off",
+    @Param() params: {id:string, status:"on" | "off"},
     @SupabaseCtx('userClaims') user: SupabaseContext['userClaims'],
   ) {
-    const tenant = await this.appService.getTenant(user!.id, id);
+    const tenant = await this.appService.getTenant(user!.id, params.id);
     if (tenant) {
-      tenant.ffmpeglabStatus = status;
+      tenant.ffmpeglabStatus = params.status;
       return await this.appService.updateTenant(tenant);
     }
     throw NotFoundException
